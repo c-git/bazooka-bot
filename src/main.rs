@@ -10,6 +10,7 @@ type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 /// Responds with "world!"
 #[poise::command(slash_command)]
 async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
+    info!("{} says hi", ctx.author().name);
     ctx.say("world!").await?;
     Ok(())
 }

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Context as _;
 use poise::serenity_prelude::{self as serenity, GuildId};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
@@ -9,7 +11,7 @@ struct Data {} // User data, which is stored and accessible in all command invoc
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 
 /// Responds with "world!"
-#[poise::command(slash_command)]
+#[poise::command(slash_command, prefix_command, track_edits)]
 async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
     info!("{} says hi", ctx.author().name);
     ctx.say("world!").await?;
@@ -17,7 +19,7 @@ async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
 }
 
 /// Displays your or another user's account creation date
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(slash_command, prefix_command, track_edits)]
 async fn age(
     ctx: Context<'_>,
     #[description = "Selected user"] user: Option<serenity::User>,
@@ -39,6 +41,14 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![hello(), age()],
+            prefix_options: poise::PrefixFrameworkOptions {
+                prefix: Some("bb".into()),
+                edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
+                    std::time::Duration::from_secs(3600),
+                ))),
+                case_insensitive_commands: true,
+                ..Default::default()
+            },
             ..Default::default()
         })
         .setup(|ctx, ready, framework| {
@@ -56,10 +66,13 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
         })
         .build();
 
-    let client = ClientBuilder::new(discord_token, GatewayIntents::non_privileged())
-        .framework(framework)
-        .await
-        .map_err(shuttle_runtime::CustomError::new)?;
+    let client = ClientBuilder::new(
+        discord_token,
+        GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
+    )
+    .framework(framework)
+    .await
+    .map_err(shuttle_runtime::CustomError::new)?;
 
     Ok(client.into())
 }

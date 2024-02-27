@@ -2,6 +2,7 @@ use anyhow::Context as _;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
+use tracing::info;
 
 struct Data {} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -26,9 +27,10 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
             commands: vec![hello()],
             ..Default::default()
         })
-        .setup(|ctx, _ready, framework| {
+        .setup(|ctx, ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                info!("{} is connected!", ready.user.name);
                 Ok(Data {})
             })
         })

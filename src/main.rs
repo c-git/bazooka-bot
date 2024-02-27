@@ -21,7 +21,6 @@ async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Responds with debug info
 #[poise::command(hide_in_help, slash_command, prefix_command, track_edits)]
 async fn debug(ctx: Context<'_>) -> anyhow::Result<()> {
-    info!("{:?}", ctx);
     let response = format!("Author: `{}`\nPrefix:{}", ctx.author().name, ctx.prefix(),);
     info!(response);
     ctx.say(response).await?;

@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use poise::serenity_prelude::{self as serenity};
+use poise::serenity_prelude::{self as serenity, GuildId};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
@@ -43,7 +43,13 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
         })
         .setup(|ctx, ready, framework| {
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                // poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                poise::builtins::register_in_guild(
+                    ctx,
+                    &framework.options().commands,
+                    GuildId::new(839130241040515072),
+                )
+                .await?;
                 info!("{} is connected!", ready.user.name);
                 Ok(Data {})
             })

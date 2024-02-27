@@ -7,9 +7,16 @@ use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::info;
 
+#[derive(Debug)]
 struct Data {} // User data, which is stored and accessible in all command invocations
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 
+/// Responds with "pong"
+#[poise::command(slash_command, prefix_command, track_edits)]
+async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
+    ctx.say("pong!").await?;
+    Ok(())
+}
 /// Responds with "world!"
 #[poise::command(slash_command, prefix_command, track_edits)]
 async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
@@ -26,6 +33,7 @@ async fn age(
 ) -> anyhow::Result<()> {
     let u = user.as_ref().unwrap_or_else(|| ctx.author());
     let response = format!("{}'s account was created at {}", u.name, u.created_at());
+
     info!(response);
     ctx.say(response).await?;
     Ok(())
@@ -40,7 +48,7 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![hello(), age()],
+            commands: vec![hello(), age(), ping()],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(

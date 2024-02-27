@@ -5,12 +5,11 @@ use shuttle_serenity::ShuttleSerenity;
 use tracing::info;
 
 struct Data {} // User data, which is stored and accessible in all command invocations
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
+type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 
 /// Responds with "world!"
 #[poise::command(slash_command)]
-async fn hello(ctx: Context<'_>) -> Result<(), Error> {
+async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
     ctx.say("world!").await?;
     Ok(())
 }

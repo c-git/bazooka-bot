@@ -1,6 +1,7 @@
+use poise::serenity_prelude::User;
 use tracing::instrument;
 
-use crate::{call_to_parent_command, fn_start_tracing, Context};
+use crate::{call_to_parent_command, data::Data, fn_start_tracing, Context};
 
 #[poise::command(
     prefix_command,
@@ -16,9 +17,12 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 #[poise::command(prefix_command, slash_command)]
 #[instrument(name = "unranked-idea-add", skip(ctx))]
 /// Adds a new idea
-pub async fn add(ctx: Context<'_>, _description: String) -> anyhow::Result<()> {
+pub async fn add(ctx: Context<'_>, description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    todo!()
+    ctx.data().add(ctx.author(), description).await?;
+    ctx.reply("Idea Saved").await?;
+    // TODO 1: Display Ideas
+    Ok(())
 }
 
 #[poise::command(prefix_command, slash_command)]
@@ -71,4 +75,10 @@ pub async fn vote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
+}
+
+impl Data {
+    async fn add(&self, user: &User, description: String) -> anyhow::Result<()> {
+        self.unranked_idea_add(user, description)
+    }
 }

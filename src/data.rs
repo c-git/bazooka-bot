@@ -6,7 +6,7 @@ use tracing::error;
 
 use self::unranked::Unranked;
 
-mod unranked;
+pub mod unranked;
 
 #[derive(Debug)]
 /// User data, which is stored and accessible in all command invocations

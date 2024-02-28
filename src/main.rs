@@ -65,6 +65,17 @@ async fn load_msg(ctx: Context<'_>) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Show help menu
+#[poise::command(prefix_command, track_edits, slash_command)]
+pub async fn help(
+    ctx: Context<'_>,
+    #[description = "Specific command to show help about"] command: Option<String>,
+) -> anyhow::Result<()> {
+    let config = Default::default();
+    poise::builtins::help(ctx, command.as_deref(), config).await?;
+    Ok(())
+}
+
 #[shuttle_runtime::main]
 async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
     // Get the discord token set in `Secrets.toml`
@@ -74,7 +85,15 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![hello(), age(), ping(), debug(), save_msg(), load_msg()],
+            commands: vec![
+                hello(),
+                age(),
+                ping(),
+                debug(),
+                save_msg(),
+                load_msg(),
+                help(),
+            ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(

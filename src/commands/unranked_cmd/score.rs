@@ -1,4 +1,9 @@
-use crate::{call_to_parent_command, fn_start_tracing, Context};
+//! Groups the commands related to the scoring functionality for unranked
+
+use crate::{
+    commands::{call_to_parent_command, fn_start_tracing},
+    Context,
+};
 use tracing::instrument;
 
 #[poise::command(prefix_command, slash_command, subcommands("set", "remove", "results"))]

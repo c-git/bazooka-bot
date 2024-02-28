@@ -1,14 +1,15 @@
-//! This module exists to make it harder to get deadlocks by groups functions that must not call each other.
+//! This module exists to make it harder to get deadlocks by grouping functions that MUST NOT call each other.
 //! Makes use of the fact that it is a sub-module of data to access the private function from there to implement its functionality
 
 use std::sync::MutexGuard;
 
 use poise::serenity_prelude::User;
 
-use crate::data::{Data, InternalData};
+use super::super::Data;
+use crate::model::InternalData;
 
 impl Data {
-    /// Servers as the link to the private function that returns the guard
+    /// Serves as the link to the private function that returns the guard
     fn guard(&self) -> anyhow::Result<MutexGuard<InternalData>> {
         self.internal_data_guard()
     }

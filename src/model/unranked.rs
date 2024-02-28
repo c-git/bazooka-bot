@@ -1,3 +1,5 @@
+//! Groups the functionality related to unranked business logic
+
 use std::collections::BTreeMap;
 
 use poise::serenity_prelude::{User, UserId};

@@ -1,7 +1,12 @@
+//! The commands related to the idea functionality for unranked
+
 use poise::serenity_prelude::User;
 use tracing::instrument;
 
-use crate::{call_to_parent_command, data::Data, fn_start_tracing, Context};
+use crate::{
+    commands::{call_to_parent_command, fn_start_tracing, Context},
+    model::Data,
+};
 
 #[poise::command(
     prefix_command,

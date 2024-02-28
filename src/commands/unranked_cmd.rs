@@ -1,7 +1,12 @@
+//! Groups the commands related to the unranked challenge
+
 use tracing::instrument;
 
 use self::score::score;
-use crate::{call_to_parent_command, fn_start_tracing, Context};
+use crate::{
+    commands::{call_to_parent_command, fn_start_tracing},
+    Context,
+};
 use idea::idea;
 
 mod idea;

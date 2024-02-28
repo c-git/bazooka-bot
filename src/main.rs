@@ -1,14 +1,15 @@
 use std::sync::Arc;
 
 use anyhow::Context as _;
+use data::Data;
 use poise::serenity_prelude::{self as serenity, GuildId};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::info;
 
-#[derive(Debug)]
-struct Data {} // User data, which is stored and accessible in all command invocations
+mod data;
+
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 
 /// Responds with "pong"
@@ -44,9 +45,23 @@ async fn age(
 ) -> anyhow::Result<()> {
     let u = user.as_ref().unwrap_or_else(|| ctx.author());
     let response = format!("{}'s account was created at {}", u.name, u.created_at());
-
     info!(response);
     ctx.say(response).await?;
+    Ok(())
+}
+
+/// Saves a message
+#[poise::command(slash_command, prefix_command, track_edits)]
+async fn save_msg(ctx: Context<'_>, message: String) -> anyhow::Result<()> {
+    ctx.data().set_message(message)?;
+    ctx.say("Message Saved").await?;
+    Ok(())
+}
+
+/// Returns the saved message
+#[poise::command(slash_command, prefix_command, track_edits)]
+async fn load_msg(ctx: Context<'_>) -> anyhow::Result<()> {
+    ctx.say(ctx.data().message()?).await?;
     Ok(())
 }
 
@@ -59,7 +74,7 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![hello(), age(), ping(), debug()],
+            commands: vec![hello(), age(), ping(), debug(), save_msg(), load_msg()],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
@@ -80,7 +95,7 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
                 )
                 .await?;
                 info!("{} is connected!", ready.user.name);
-                Ok(Data {})
+                Ok(Data::new())
             })
         })
         .build();

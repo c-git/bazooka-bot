@@ -32,7 +32,13 @@ At the start of unranked each season the following should happen.
 It will be scheduled manually each season by an officer.
 
 - [ ] Verify user is authorized
+- [ ] Print current info before clearing
 - [ ] Clear the scores for the last season
 - [ ] Determine the winning idea (Highest votes or lower ID if tied)
 - [ ] Set the new unranked message based on the winning idea (Should show with the scores so people know what the unranked is).
 - [ ] Clear the ideas. Keep any ideas with more than `idea_keep_threshold` votes except for the winning one.
+- [ ] Announce the new unranked challenge
+
+# Nice to have
+
+- [ ] Add web page (with info and to wake up bot) https://docs.shuttle.rs/templates/tutorials/custom-service

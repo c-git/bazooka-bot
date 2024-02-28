@@ -8,10 +8,11 @@ use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::{info, instrument};
-use unranked::unranked;
 
+mod commands;
 mod data;
-mod unranked;
+
+use commands::{unranked, Unranked};
 
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 

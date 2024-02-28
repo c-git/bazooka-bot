@@ -4,7 +4,7 @@ use anyhow::Context;
 use shuttle_persist::PersistInstance;
 use tracing::error;
 
-use crate::unranked::Unranked;
+use crate::Unranked;
 
 #[derive(Debug)]
 /// User data, which is stored and accessible in all command invocations

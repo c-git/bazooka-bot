@@ -36,10 +36,15 @@ async fn main(
     #[shuttle_secrets::Secrets] secret_store: SecretStore,
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
-    // Get the discord token set in `Secrets.toml`
+    // Get the discord token and guild_id set in `Secrets.toml`
     let discord_token = secret_store
         .get("DISCORD_TOKEN")
         .context("'DISCORD_TOKEN' was not found")?;
+    let guild_id: u64 = secret_store
+        .get("GUILD_ID")
+        .context("'GUILD_ID' was not found")?
+        .parse()
+        .context("failed to parse GUILD_ID")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -54,13 +59,12 @@ async fn main(
             },
             ..Default::default()
         })
-        .setup(|ctx, ready, framework| {
+        .setup(move |ctx, ready, framework| {
             Box::pin(async move {
-                // poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 poise::builtins::register_in_guild(
                     ctx,
                     &framework.options().commands,
-                    GuildId::new(839130241040515072),
+                    GuildId::new(guild_id),
                 )
                 .await?;
                 info!("{} is connected!", ready.user.name);

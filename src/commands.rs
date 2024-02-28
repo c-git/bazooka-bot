@@ -1,2 +1,2 @@
 mod unranked;
-pub use unranked::{unranked, Unranked};
+pub use unranked::unranked;

@@ -12,7 +12,7 @@ use tracing::{info, instrument};
 mod commands;
 mod data;
 
-use commands::{unranked, Unranked};
+use commands::unranked;
 
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
 

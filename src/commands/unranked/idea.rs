@@ -1,20 +1,6 @@
-use poise::serenity_prelude::UserId;
 use tracing::instrument;
 
 use crate::{call_to_parent_command, fn_start_tracing, Context};
-
-pub type Ideas = Vec<Idea>;
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct Idea {
-    id: IdeaID,
-    creator: UserId,
-    description: String,
-    voters: Vec<UserId>,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct IdeaID(u32);
 
 #[poise::command(
     prefix_command,

@@ -1,16 +1,11 @@
 use tracing::instrument;
 
-use self::{idea::Ideas, score::score};
+use self::score::score;
 use crate::{call_to_parent_command, fn_start_tracing, Context};
 use idea::idea;
 
 mod idea;
 mod score;
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
-pub struct Unranked {
-    ideas: Ideas,
-}
 
 #[poise::command(
     prefix_command,

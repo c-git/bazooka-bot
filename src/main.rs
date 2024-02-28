@@ -20,52 +20,6 @@ async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Responds with debug info
-#[poise::command(hide_in_help, slash_command, prefix_command, track_edits)]
-async fn debug(ctx: Context<'_>) -> anyhow::Result<()> {
-    let response = format!("Author: `{}`\nPrefix:{}", ctx.author().name, ctx.prefix(),);
-    info!(response);
-    ctx.say(response).await?;
-    info!("ctx: {:?}", ctx);
-    Ok(())
-}
-
-/// Responds with "world!"
-#[poise::command(slash_command, prefix_command, track_edits)]
-async fn hello(ctx: Context<'_>) -> anyhow::Result<()> {
-    info!("{} says hi", ctx.author().name);
-    ctx.say("world!").await?;
-    Ok(())
-}
-
-/// Displays your or another user's account creation date
-#[poise::command(slash_command, prefix_command, track_edits)]
-async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> anyhow::Result<()> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    info!(response);
-    ctx.say(response).await?;
-    Ok(())
-}
-
-/// Saves a message
-#[poise::command(slash_command, prefix_command, track_edits)]
-async fn save_msg(ctx: Context<'_>, message: String) -> anyhow::Result<()> {
-    ctx.data().set_message(message)?;
-    ctx.say("Message Saved").await?;
-    Ok(())
-}
-
-/// Returns the saved message
-#[poise::command(slash_command, prefix_command, track_edits)]
-async fn load_msg(ctx: Context<'_>) -> anyhow::Result<()> {
-    ctx.say(ctx.data().message()?).await?;
-    Ok(())
-}
-
 /// Show help menu
 #[poise::command(prefix_command, track_edits, slash_command)]
 pub async fn help(
@@ -89,15 +43,7 @@ async fn main(
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![
-                hello(),
-                age(),
-                ping(),
-                debug(),
-                save_msg(),
-                load_msg(),
-                help(),
-            ],
+            commands: vec![ping(), help()],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(

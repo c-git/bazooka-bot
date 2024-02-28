@@ -8,23 +8,21 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
 
 # Unranked unranked
 
-- [ ] `/unranked idea`
-  - [ ] `add(description)`
-  - [ ] `edit(id, new_description)`
-  - [ ] `remove(id)`
-  - [ ] `vote(id)`
-  - [ ] `unvote(id)`
-  - [ ] `vote_all`
-  - [ ] `unvote_all`
+- [x] `/unranked idea`
+  - [x] `add(description)`
+  - [x] `edit(id, new_description)`
+  - [x] `remove(id)`
+  - [x] `vote(id)`
+  - [x] `unvote(id)`
+  - [x] `vote_all`
+  - [x] `unvote_all`
 - [ ] `/unranked score`
-  - [ ] `add(score)`
-  - [ ] `edit(new_score)`
-  - [ ] `remove`
-  - [ ] `other_add(user, score)` (Auth Req)
-  - [ ] `other_edit(user, new_score)` (Auth Req)
+  - [x] `set(score)`
+  - [x] `remove`
+  - [x] `results`
+  - [ ] `other_set(user, score)` (Auth Req)
   - [ ] `other_remove(user)` (Auth Req)
-- [ ] `/unranked results`
-- [ ] `/unranked schedule_reset(date_time)` (Auth Req)
+- [x] `/unranked schedule_reset(date_time)` (Auth Req)
 
 ## Scheduled Actions
 
@@ -42,3 +40,4 @@ It will be scheduled manually each season by an officer.
 # Nice to have
 
 - [ ] Add web page (with info and to wake up bot) https://docs.shuttle.rs/templates/tutorials/custom-service
+- [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs

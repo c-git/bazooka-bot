@@ -4,6 +4,8 @@ use anyhow::Context;
 use shuttle_persist::PersistInstance;
 use tracing::error;
 
+use crate::unranked::Unranked;
+
 #[derive(Debug)]
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
@@ -14,8 +16,7 @@ pub struct Data {
 /// Stores the data used by the application
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 struct InternalData {
-    message: String,
-    count: u16,
+    unranked: Unranked,
 }
 
 impl Data {
@@ -25,19 +26,6 @@ impl Data {
             Ok(guard) => Ok(guard),
             Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),
         }
-    }
-    pub fn set_message(&self, new_message: String) -> anyhow::Result<()> {
-        let mut guard = self.internal_data()?;
-        guard.message = new_message;
-        guard.count += 1;
-
-        // TODO 3: Make save periodic instead of on every change
-        self.save(&guard)?;
-        Ok(())
-    }
-    pub fn message(&self) -> anyhow::Result<String> {
-        let guard = self.internal_data()?;
-        Ok(format!("#{} - {}", guard.count, guard.message))
     }
 
     pub(crate) fn new(persist: PersistInstance) -> Self {
@@ -54,6 +42,7 @@ impl Data {
     }
 
     fn save(&self, value: &InternalData) -> anyhow::Result<()> {
+        // TODO 3: Make save periodic instead of on every change
         self.persist
             .save(Self::DATA_KEY, value)
             .context("failed to save data")?;

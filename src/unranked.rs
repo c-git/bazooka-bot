@@ -1,0 +1,32 @@
+use tracing::instrument;
+
+use self::{idea::Ideas, score::score};
+use crate::{call_to_parent_command, fn_start_tracing, Context};
+use idea::idea;
+
+mod idea;
+mod score;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
+pub struct Unranked {
+    ideas: Ideas,
+}
+
+#[poise::command(
+    prefix_command,
+    slash_command,
+    subcommands("idea", "score", "schedule_reset")
+)]
+#[instrument(name = "unranked", skip(ctx))]
+/// Commands related to the Unranked Challenge
+pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
+    call_to_parent_command(ctx).await
+}
+
+#[poise::command(prefix_command, slash_command)]
+#[instrument(name = "schedule_reset", skip(ctx))]
+pub async fn schedule_reset(ctx: Context<'_>) -> anyhow::Result<()> {
+    // TODO 2: Require Auth
+    fn_start_tracing(&ctx);
+    todo!()
+}

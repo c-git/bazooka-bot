@@ -169,11 +169,22 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "poise",
+ "serde",
+ "shuttle-persist",
  "shuttle-runtime",
  "shuttle-secrets",
  "shuttle-serenity",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1924,6 +1935,19 @@ dependencies = [
  "url",
  "uuid",
  "zeroize",
+]
+
+[[package]]
+name = "shuttle-persist"
+version = "0.39.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a6b921e6744a4eed5df6cfa4434dc317e0561361b81c7a2318371b8ec7faf42"
+dependencies = [
+ "async-trait",
+ "bincode",
+ "serde",
+ "shuttle-service",
+ "thiserror",
 ]
 
 [[package]]

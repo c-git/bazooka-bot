@@ -4,6 +4,7 @@ use anyhow::Context as _;
 use data::Data;
 use poise::serenity_prelude::{self as serenity, GuildId};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::info;
@@ -77,7 +78,10 @@ pub async fn help(
 }
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
+async fn main(
+    #[shuttle_secrets::Secrets] secret_store: SecretStore,
+    #[shuttle_persist::Persist] persist: PersistInstance,
+) -> ShuttleSerenity {
     // Get the discord token set in `Secrets.toml`
     let discord_token = secret_store
         .get("DISCORD_TOKEN")
@@ -114,7 +118,7 @@ async fn main(#[shuttle_secrets::Secrets] secret_store: SecretStore) -> ShuttleS
                 )
                 .await?;
                 info!("{} is connected!", ready.user.name);
-                Ok(Data::new())
+                Ok(Data::new(persist))
             })
         })
         .build();

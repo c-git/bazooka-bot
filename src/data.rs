@@ -21,7 +21,7 @@ struct InternalData {
 
 impl Data {
     const DATA_KEY: &'static str = "internal_data";
-    fn internal_data(&self) -> anyhow::Result<MutexGuard<'_, InternalData>> {
+    fn internal_data_guard(&self) -> anyhow::Result<MutexGuard<'_, InternalData>> {
         match self.internal.lock() {
             Ok(guard) => Ok(guard),
             Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),

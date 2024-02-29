@@ -7,7 +7,10 @@ use tracing::instrument;
 
 use crate::{
     commands::{call_to_parent_command, fn_start_tracing, Context},
-    model::{unranked::IdeaId, Data},
+    model::{
+        unranked::{Idea, IdeaId},
+        Data,
+    },
 };
 
 #[poise::command(
@@ -37,7 +40,7 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     ctx.data().add(ctx.author(), description)?;
-    display_ideas_with_msg(&ctx, "Idea Saved").await?;
+    display_ideas_with_msg(&ctx, "Idea Added").await?;
     Ok(())
 }
 
@@ -61,7 +64,17 @@ pub async fn edit(
 /// Removes and idea you previously created
 pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    todo!()
+    let id: IdeaId = id.into();
+    let old_idea = ctx.data().remove(id, ctx.author())?;
+    display_ideas_with_msg(
+        &ctx,
+        format!(
+            "Idea Removed. It was ID {id} with description: {:?}",
+            old_idea.description()
+        ),
+    )
+    .await?;
+    Ok(())
 }
 
 #[poise::command(prefix_command, slash_command)]
@@ -126,5 +139,10 @@ impl Data {
 
     fn edit(&self, id: IdeaId, user: &User, new_description: String) -> anyhow::Result<()> {
         self.unranked_idea_edit(id, user, new_description)
+    }
+
+    /// Attempts to remove and return the Idea
+    fn remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
+        self.unranked_idea_remove(id, user)
     }
 }

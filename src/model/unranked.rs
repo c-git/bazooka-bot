@@ -50,6 +50,10 @@ impl Idea {
         }
         Ok(users_names.join(", "))
     }
+
+    pub fn description(&self) -> &str {
+        &self.description
+    }
 }
 
 impl Display for Idea {
@@ -131,6 +135,35 @@ impl Ideas {
         );
         idea.description = new_description;
         Ok(())
+    }
+
+    /// Attempts to remove the Idea and return it
+    fn remove(&mut self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
+        let Some(idea) = self.data.get(id.as_index()) else {
+            bail!(
+                "ID: {id} is not a valid ID. {}",
+                if self.data.is_empty() {
+                    "There are NO ideas.".to_string()
+                } else {
+                    format!("Valid IDs are 1..{}", self.data.len())
+                }
+            )
+        };
+
+        // Confirm this user created the Idea
+        if idea.creator != user.id.into() {
+            warn!(
+                "Request to remove Idea# {id} by user {} but it was created by {}",
+                user.id,
+                idea.creator.to_user_id()
+            );
+            bail!("Failed to remove Idea# {id} because you didn't create it.")
+        }
+
+        // Action the removal
+        let result = self.data.remove(id.as_index());
+        info!("Removing Idea at ID: {id}. {result:?}");
+        Ok(result)
     }
 }
 

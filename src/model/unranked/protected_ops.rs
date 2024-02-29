@@ -14,14 +14,14 @@ impl Data {
         self.internal_data_guard()
     }
 
-    pub fn unranked_idea_add(&self, user: &User, description: String) -> anyhow::Result<()> {
+    pub(crate) fn unranked_idea_add(&self, user: &User, description: String) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
         guard.unranked.ideas.add(user, description);
         self.save(&guard)?;
         Ok(())
     }
 
-    pub fn unranked_idea_edit(
+    pub(crate) fn unranked_idea_edit(
         &self,
         id: IdeaId,
         user: &User,
@@ -34,14 +34,39 @@ impl Data {
     }
 
     /// Attempts to remove and return the Idea
-    pub fn unranked_idea_remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
+    pub(crate) fn unranked_idea_remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
         let mut guard = self.guard()?;
         let result = guard.unranked.ideas.remove(id, user)?;
         self.save(&guard)?;
         Ok(result)
     }
 
-    pub async fn unranked_ideas_as_string(
+    /// Returns true iff a change was made
+    pub(crate) fn unranked_idea_change_vote(
+        &self,
+        id: IdeaId,
+        user: &User,
+        is_add_vote: bool,
+    ) -> anyhow::Result<bool> {
+        let mut guard = self.guard()?;
+        let result = guard.unranked.ideas.change_vote(id, user, is_add_vote)?;
+        self.save(&guard)?;
+        Ok(result)
+    }
+
+    /// Returns the number of votes changed
+    pub(crate) fn unranked_idea_change_vote_all(
+        &self,
+        user: &User,
+        is_add_vote: bool,
+    ) -> anyhow::Result<usize> {
+        let mut guard = self.guard()?;
+        let result = guard.unranked.ideas.change_vote_all(user, is_add_vote);
+        self.save(&guard)?;
+        Ok(result)
+    }
+
+    pub(crate) async fn unranked_ideas_as_string(
         &self,
         ctx: &Context<'_>,
         is_verbose: bool,

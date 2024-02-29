@@ -54,6 +54,33 @@ impl Idea {
     pub fn description(&self) -> &str {
         &self.description
     }
+
+    fn change_vote(&mut self, user: &User, is_add_vote: bool) -> bool {
+        let user_number: UserIdNumber = user.id.into();
+        let position = self.voters.iter().enumerate().find_map(|(i, voter)| {
+            if &user_number == voter {
+                Some(i)
+            } else {
+                None
+            }
+        });
+        match (position, is_add_vote) {
+            (None, false) | (Some(_), true) => {
+                // Already matches no action needed
+                false
+            }
+            (None, true) => {
+                // Not present but should be added
+                self.voters.push(user_number);
+                true
+            }
+            (Some(idx), false) => {
+                // Exits but should be removed
+                self.voters.remove(idx);
+                true
+            }
+        }
+    }
 }
 
 impl Display for Idea {
@@ -151,7 +178,41 @@ impl Ideas {
         info!("Removing Idea at ID: {id}. {result:?}");
         Ok(result)
     }
-    fn invalid_id(&self, id: IdeaId) -> anyhow::Error {
+
+    /// Returns true iff a change was made
+    fn change_vote(&mut self, id: IdeaId, user: &User, is_add_vote: bool) -> anyhow::Result<bool> {
+        let Some(idea) = self.data.get_mut(id.as_index()) else {
+            return Err(self.err_invalid_id(id));
+        };
+
+        // Action the vote
+        let result = idea.change_vote(user, is_add_vote);
+        info!(
+            "{} vote for user {:?} on Idea# {id} result in {}",
+            if is_add_vote { "Add" } else { "Remove" },
+            user.name,
+            if result { "a change" } else { "no change" }
+        );
+        Ok(result)
+    }
+
+    /// Returns the number of votes changed
+    fn change_vote_all(&mut self, user: &User, is_add_vote: bool) -> usize {
+        let mut result = 0;
+        for idea in self.data.iter_mut() {
+            if idea.change_vote(user, is_add_vote) {
+                result += 1;
+            };
+        }
+        info!(
+            "{} vote for user {:?} on all ideas result in {result} changes",
+            if is_add_vote { "Add" } else { "Remove" },
+            user.name,
+        );
+        result
+    }
+
+    fn err_invalid_id(&self, id: IdeaId) -> anyhow::Error {
         anyhow::format_err!(
             "ID: {id} is not a valid ID. {}",
             if self.data.is_empty() {

@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use self::{idea::idea, score::score};
 use crate::{
-    commands::{call_to_parent_command, fn_start_tracing},
+    commands::{call_to_parent_command, tracing_handler_start},
     Context,
 };
 
@@ -27,6 +27,6 @@ pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "schedule_reset", skip(ctx))]
 pub async fn schedule_reset(ctx: Context<'_>) -> anyhow::Result<()> {
     // TODO 2: Require Auth
-    fn_start_tracing(&ctx);
+    tracing_handler_start(&ctx);
     todo!()
 }

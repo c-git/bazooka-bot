@@ -1,7 +1,7 @@
 //! Groups the commands related to the scoring functionality for unranked
 
 use crate::{
-    commands::{call_to_parent_command, fn_start_tracing},
+    commands::{call_to_parent_command, tracing_handler_start},
     Context,
 };
 use tracing::instrument;
@@ -17,7 +17,7 @@ pub async fn score(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-score-set", skip(ctx))]
 /// Set or overwrite your score
 pub async fn set(ctx: Context<'_>, score: u8) -> anyhow::Result<()> {
-    fn_start_tracing(&ctx);
+    tracing_handler_start(&ctx);
     todo!()
 }
 
@@ -25,7 +25,7 @@ pub async fn set(ctx: Context<'_>, score: u8) -> anyhow::Result<()> {
 #[instrument(name = "unranked-score-remove", skip(ctx))]
 /// Remove your score
 pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
-    fn_start_tracing(&ctx);
+    tracing_handler_start(&ctx);
     todo!()
 }
 
@@ -33,6 +33,6 @@ pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-score-results", skip(ctx))]
 /// Show the current score results
 pub async fn results(ctx: Context<'_>) -> anyhow::Result<()> {
-    fn_start_tracing(&ctx);
+    tracing_handler_start(&ctx);
     todo!()
 }

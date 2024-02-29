@@ -33,6 +33,7 @@ impl Data {
         Ok(())
     }
 
+    /// Attempts to remove and return the Idea
     pub fn unranked_idea_remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
         let mut guard = self.guard()?;
         let result = guard.unranked.ideas.remove(id, user)?;

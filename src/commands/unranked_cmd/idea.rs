@@ -2,15 +2,11 @@
 
 use std::num::NonZeroUsize;
 
-use poise::serenity_prelude::User;
 use tracing::instrument;
 
 use crate::{
     commands::{call_to_parent_command, fn_start_tracing, Context},
-    model::{
-        unranked::{Idea, IdeaId},
-        Data,
-    },
+    model::unranked::IdeaId,
 };
 
 #[poise::command(
@@ -39,7 +35,7 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Adds a new idea
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    ctx.data().add(ctx.author(), description)?;
+    ctx.data().unranked_idea_add(ctx.author(), description)?;
     display_ideas_with_msg(&ctx, "Idea Added").await?;
     Ok(())
 }
@@ -54,7 +50,8 @@ pub async fn edit(
 ) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     let id: IdeaId = id.into();
-    ctx.data().edit(id, ctx.author(), new_description)?;
+    ctx.data()
+        .unranked_idea_edit(id, ctx.author(), new_description)?;
     display_ideas_with_msg(&ctx, "Idea Updated").await?;
     Ok(())
 }
@@ -65,7 +62,7 @@ pub async fn edit(
 pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     let id: IdeaId = id.into();
-    let old_idea = ctx.data().remove(id, ctx.author())?;
+    let old_idea = ctx.data().unranked_idea_remove(id, ctx.author())?;
     display_ideas_with_msg(
         &ctx,
         format!(
@@ -130,19 +127,4 @@ pub async fn display_ideas_with_msg<S: Into<String>>(
     display_ideas(ctx, false).await?;
     ctx.reply(extra_msg).await?;
     Ok(())
-}
-
-impl Data {
-    fn add(&self, user: &User, description: String) -> anyhow::Result<()> {
-        self.unranked_idea_add(user, description)
-    }
-
-    fn edit(&self, id: IdeaId, user: &User, new_description: String) -> anyhow::Result<()> {
-        self.unranked_idea_edit(id, user, new_description)
-    }
-
-    /// Attempts to remove and return the Idea
-    fn remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
-        self.unranked_idea_remove(id, user)
-    }
 }

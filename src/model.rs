@@ -65,7 +65,10 @@ impl Data {
     pub fn new(persist: PersistInstance) -> Self {
         let internal = Arc::new(Mutex::new(
             match persist.load::<InternalData>(Self::DATA_KEY) {
-                Ok(data) => data,
+                Ok(data) => {
+                    info!("Data Loaded");
+                    data
+                }
                 Err(e) => {
                     error!("failed to load data: {e}");
                     Default::default()

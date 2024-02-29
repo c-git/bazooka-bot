@@ -11,7 +11,17 @@ use crate::{
 #[poise::command(
     prefix_command,
     slash_command,
-    subcommands("add", "edit", "remove", "vote", "unvote", "vote_all", "unvote_all",)
+    track_edits,
+    subcommands(
+        "add",
+        "edit",
+        "remove",
+        "vote",
+        "unvote",
+        "vote_all",
+        "unvote_all",
+        "display"
+    )
 )]
 #[instrument(name = "idea", skip(ctx))]
 /// Commands related to ideas for the next unranked event
@@ -25,12 +35,11 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn add(ctx: Context<'_>, description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     ctx.data().add(ctx.author(), description).await?;
-    ctx.reply("Idea Saved").await?;
-    // TODO 1: Display Ideas
+    display_ideas(&ctx, Some("Idea Saved")).await?;
     Ok(())
 }
 
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(prefix_command, slash_command, track_edits)]
 #[instrument(name = "unranked-idea-edit", skip(ctx))]
 /// Edits an idea you previously created
 // TODO 4: Replace u32 with IdeaID
@@ -80,6 +89,25 @@ pub async fn vote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
+}
+
+#[poise::command(prefix_command, slash_command, track_edits)]
+#[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
+/// Removes your vote for all ideas
+pub async fn display(ctx: Context<'_>) -> anyhow::Result<()> {
+    fn_start_tracing(&ctx);
+    display_ideas::<&str>(&ctx, None).await
+}
+
+pub async fn display_ideas<S: Into<String>>(
+    ctx: &Context<'_>,
+    extra_msg: Option<S>,
+) -> anyhow::Result<()> {
+    ctx.say("Show ideas here").await?; // TODO 1 : Continue here
+    if let Some(s) = extra_msg {
+        ctx.reply(s).await?;
+    }
+    Ok(())
 }
 
 impl Data {

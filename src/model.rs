@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use anyhow::Context as _;
 use shuttle_persist::PersistInstance;
-use tracing::error;
+use tracing::{error, info};
 
 use self::unranked::Unranked;
 
@@ -58,6 +58,7 @@ impl Data {
         self.persist
             .save(Self::DATA_KEY, value)
             .context("failed to save data")?;
+        info!("Data Saved");
         Ok(())
     }
 }

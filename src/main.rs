@@ -42,12 +42,19 @@ async fn main(
         })
         .setup(move |ctx, ready, framework| {
             Box::pin(async move {
+                info!("Going to register guild: {guild_id}");
                 poise::builtins::register_in_guild(
                     ctx,
                     &framework.options().commands,
                     GuildId::new(guild_id),
                 )
-                .await?;
+                .await
+                .with_context(|| {
+                    format!(
+                        "failed to register {:?} in guild: {guild_id}",
+                        ready.user.name
+                    )
+                })?;
                 info!("{} is connected!", ready.user.name);
                 Ok(Data::new(persist))
             })

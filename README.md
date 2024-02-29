@@ -41,3 +41,4 @@ It will be scheduled manually each season by an officer.
 
 - [ ] Add web page (with info and to wake up bot) https://docs.shuttle.rs/templates/tutorials/custom-service
 - [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
+- [ ] Restrict unranked to that channel

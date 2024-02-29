@@ -32,10 +32,10 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 #[poise::command(prefix_command, slash_command)]
 #[instrument(name = "unranked-idea-add", skip(ctx))]
 /// Adds a new idea
-pub async fn add(ctx: Context<'_>, description: String) -> anyhow::Result<()> {
+pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     ctx.data().add(ctx.author(), description).await?;
-    display_ideas(&ctx, Some("Idea Saved")).await?;
+    display_ideas_with_msg(&ctx, "Idea Saved").await?;
     Ok(())
 }
 
@@ -43,7 +43,11 @@ pub async fn add(ctx: Context<'_>, description: String) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-edit", skip(ctx))]
 /// Edits an idea you previously created
 // TODO 4: Replace u32 with IdeaID
-pub async fn edit(ctx: Context<'_>, id: u32, new_description: String) -> anyhow::Result<()> {
+pub async fn edit(
+    ctx: Context<'_>,
+    id: u32,
+    #[rest] new_description: String,
+) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
 }
@@ -93,20 +97,24 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 
 #[poise::command(prefix_command, slash_command, track_edits)]
 #[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
-/// Removes your vote for all ideas
-pub async fn display(ctx: Context<'_>) -> anyhow::Result<()> {
+/// Displays all ideas optionally verbosely
+pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    display_ideas::<&str>(&ctx, None).await
+    display_ideas(&ctx, is_verbose).await
 }
 
-pub async fn display_ideas<S: Into<String>>(
+pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<()> {
+    let ideas_as_string = ctx.data().unranked_ideas_as_string(ctx, is_verbose).await?;
+    ctx.say(ideas_as_string).await?;
+    Ok(())
+}
+
+pub async fn display_ideas_with_msg<S: Into<String>>(
     ctx: &Context<'_>,
-    extra_msg: Option<S>,
+    extra_msg: S,
 ) -> anyhow::Result<()> {
-    ctx.say("Show ideas here").await?; // TODO 1 : Continue here
-    if let Some(s) = extra_msg {
-        ctx.reply(s).await?;
-    }
+    display_ideas(ctx, false).await?;
+    ctx.reply(extra_msg).await?;
     Ok(())
 }
 

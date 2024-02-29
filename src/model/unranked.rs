@@ -4,7 +4,7 @@ use std::{fmt::Display, num::NonZeroUsize};
 
 use anyhow::{bail, Context as _};
 use poise::serenity_prelude::{CacheHttp, User};
-use tracing::{debug, warn};
+use tracing::{info, warn};
 
 use crate::Context;
 
@@ -125,10 +125,9 @@ impl Ideas {
             bail!("Failed to edit Idea# {id} because you didn't create it.")
         }
 
-        tracing::info!(
+        info!(
             "Replacing Idea# {id} From {:?} to {:?}",
-            idea.description,
-            new_description
+            idea.description, new_description
         );
         idea.description = new_description;
         Ok(())

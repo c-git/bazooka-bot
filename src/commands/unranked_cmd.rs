@@ -15,6 +15,7 @@ mod score;
     prefix_command,
     slash_command,
     track_edits,
+    aliases("ur"),
     subcommands(
         "idea", 
         // TODO 2: Enable functions

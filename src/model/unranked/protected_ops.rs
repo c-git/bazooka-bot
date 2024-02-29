@@ -5,7 +5,7 @@ use std::sync::MutexGuard;
 
 use poise::serenity_prelude::User;
 
-use super::super::Data;
+use super::{super::Data, IdeaId};
 use crate::{model::InternalData, Context};
 
 impl Data {
@@ -17,6 +17,18 @@ impl Data {
     pub fn unranked_idea_add(&self, user: &User, description: String) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
         guard.unranked.ideas.add(user, description);
+        self.save(&guard)?;
+        Ok(())
+    }
+
+    pub fn unranked_idea_edit(
+        &self,
+        id: IdeaId,
+        user: &User,
+        new_description: String,
+    ) -> anyhow::Result<()> {
+        let mut guard = self.guard()?;
+        guard.unranked.ideas.edit(id, user, new_description)?;
         self.save(&guard)?;
         Ok(())
     }

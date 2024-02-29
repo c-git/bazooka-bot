@@ -2,12 +2,11 @@
 
 use tracing::instrument;
 
-use self::score::score;
+use self::{idea::idea, score::score};
 use crate::{
     commands::{call_to_parent_command, fn_start_tracing},
     Context,
 };
-use idea::idea;
 
 mod idea;
 mod score;

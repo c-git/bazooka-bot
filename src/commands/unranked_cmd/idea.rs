@@ -1,11 +1,13 @@
 //! The commands related to the idea functionality for unranked
 
+use std::num::NonZeroUsize;
+
 use poise::serenity_prelude::User;
 use tracing::instrument;
 
 use crate::{
     commands::{call_to_parent_command, fn_start_tracing, Context},
-    model::Data,
+    model::{unranked::IdeaId, Data},
 };
 
 #[poise::command(
@@ -42,21 +44,22 @@ pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Resul
 #[poise::command(prefix_command, slash_command, track_edits)]
 #[instrument(name = "unranked-idea-edit", skip(ctx))]
 /// Edits an idea you previously created
-// TODO 4: Replace u32 with IdeaID
 pub async fn edit(
     ctx: Context<'_>,
-    id: u32,
+    id: NonZeroUsize,
     #[rest] new_description: String,
 ) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    todo!()
+    let id: IdeaId = id.into();
+    ctx.data().edit(id, ctx.author(), new_description)?;
+    display_ideas_with_msg(&ctx, "Idea Updated").await?;
+    Ok(())
 }
 
 #[poise::command(prefix_command, slash_command)]
 #[instrument(name = "unranked-idea-remove", skip(ctx))]
 /// Removes and idea you previously created
-// TODO 4: Replace u32 with IdeaID
-pub async fn remove(ctx: Context<'_>, id: u32) -> anyhow::Result<()> {
+pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
 }
@@ -64,8 +67,7 @@ pub async fn remove(ctx: Context<'_>, id: u32) -> anyhow::Result<()> {
 #[poise::command(prefix_command, slash_command)]
 #[instrument(name = "unranked-idea-vote", skip(ctx))]
 /// Adds your vote for the given idea (If you are currently voting for it nothing happens)
-// TODO 4: Replace u32 with IdeaID
-pub async fn vote(ctx: Context<'_>, id: u32) -> anyhow::Result<()> {
+pub async fn vote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
 }
@@ -73,8 +75,7 @@ pub async fn vote(ctx: Context<'_>, id: u32) -> anyhow::Result<()> {
 #[poise::command(prefix_command, slash_command)]
 #[instrument(name = "unranked-idea-unvote", skip(ctx))]
 /// Removes your vote for the given idea (If you are not currently voting for it nothing happens)
-// TODO 4: Replace u32 with IdeaID
-pub async fn unvote(ctx: Context<'_>, id: u32) -> anyhow::Result<()> {
+pub async fn unvote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
     todo!()
 }
@@ -121,5 +122,9 @@ pub async fn display_ideas_with_msg<S: Into<String>>(
 impl Data {
     fn add(&self, user: &User, description: String) -> anyhow::Result<()> {
         self.unranked_idea_add(user, description)
+    }
+
+    fn edit(&self, id: IdeaId, user: &User, new_description: String) -> anyhow::Result<()> {
+        self.unranked_idea_edit(id, user, new_description)
     }
 }

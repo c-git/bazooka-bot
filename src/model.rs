@@ -34,7 +34,7 @@ struct InternalData {
 
 /// Created to use in place of User or UserId from Framework because they
 // are not able to be deserialized from Bincode which shuttle-persist uses
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy, PartialEq, Eq)]
 struct UserIdNumber(u64);
 
 impl UserIdNumber {

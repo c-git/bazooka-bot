@@ -109,14 +109,7 @@ impl Ideas {
 
     fn edit(&mut self, id: IdeaId, user: &User, new_description: String) -> anyhow::Result<()> {
         let Some(idea) = self.data.get_mut(id.as_index()) else {
-            bail!(
-                "ID: {id} is not a valid ID. {}",
-                if self.data.is_empty() {
-                    "There are NO ideas.".to_string()
-                } else {
-                    format!("Valid IDs are 1..{}", self.data.len())
-                }
-            )
+            return Err(self.err_invalid_id(id));
         };
 
         // Confirm this user created the Idea
@@ -140,14 +133,7 @@ impl Ideas {
     /// Attempts to remove the Idea and return it
     fn remove(&mut self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
         let Some(idea) = self.data.get(id.as_index()) else {
-            bail!(
-                "ID: {id} is not a valid ID. {}",
-                if self.data.is_empty() {
-                    "There are NO ideas.".to_string()
-                } else {
-                    format!("Valid IDs are 1..{}", self.data.len())
-                }
-            )
+            return Err(self.err_invalid_id(id));
         };
 
         // Confirm this user created the Idea
@@ -164,6 +150,16 @@ impl Ideas {
         let result = self.data.remove(id.as_index());
         info!("Removing Idea at ID: {id}. {result:?}");
         Ok(result)
+    }
+    fn invalid_id(&self, id: IdeaId) -> anyhow::Error {
+        anyhow::format_err!(
+            "ID: {id} is not a valid ID. {}",
+            if self.data.is_empty() {
+                "There are NO ideas.".to_string()
+            } else {
+                format!("Valid IDs are 1..{}", self.data.len())
+            }
+        )
     }
 }
 

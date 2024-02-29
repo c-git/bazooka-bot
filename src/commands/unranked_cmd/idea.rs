@@ -34,7 +34,7 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Adds a new idea
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     fn_start_tracing(&ctx);
-    ctx.data().add(ctx.author(), description).await?;
+    ctx.data().add(ctx.author(), description)?;
     display_ideas_with_msg(&ctx, "Idea Saved").await?;
     Ok(())
 }
@@ -119,7 +119,7 @@ pub async fn display_ideas_with_msg<S: Into<String>>(
 }
 
 impl Data {
-    async fn add(&self, user: &User, description: String) -> anyhow::Result<()> {
+    fn add(&self, user: &User, description: String) -> anyhow::Result<()> {
         self.unranked_idea_add(user, description)
     }
 }

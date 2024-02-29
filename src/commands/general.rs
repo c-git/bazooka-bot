@@ -1,6 +1,6 @@
 //! Top level commands shared that are always available
 
-use tracing::instrument;
+use tracing::{info, instrument};
 
 use crate::{
     commands::{tracing_handler_end, tracing_handler_start},
@@ -26,5 +26,16 @@ pub async fn help(
     tracing_handler_start(&ctx);
     let config = Default::default();
     poise::builtins::help(ctx, command.as_deref(), config).await?;
+    tracing_handler_end()
+}
+
+/// Returns the version of the bot
+#[poise::command(prefix_command, track_edits, slash_command)]
+#[instrument(name = "version", skip(ctx))]
+pub async fn version(ctx: Context<'_>) -> anyhow::Result<()> {
+    tracing_handler_start(&ctx);
+    let msg = format!("Bot version is {}", version::version!());
+    info!(msg);
+    ctx.say(msg).await?;
     tracing_handler_end()
 }

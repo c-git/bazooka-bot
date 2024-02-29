@@ -1,10 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{
-    commands::{help, ping, unranked},
-    Data,
-};
+use bazooka_bot::{commands_list, Data};
 use poise::serenity_prelude::GuildId;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_persist::PersistInstance;
@@ -17,6 +14,7 @@ async fn main(
     #[shuttle_secrets::Secrets] secret_store: SecretStore,
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
+    info!("Bot version is {}", version::version!());
     // Get the discord token and guild_id set in `Secrets.toml`
     let discord_token = secret_store
         .get("DISCORD_TOKEN")
@@ -29,7 +27,7 @@ async fn main(
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![ping(), help(), unranked()],
+            commands: commands_list(),
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(

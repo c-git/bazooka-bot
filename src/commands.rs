@@ -2,7 +2,7 @@
 
 use tracing::info;
 
-use crate::Context;
+use crate::{Context, Data};
 
 mod general;
 mod unranked_cmd;
@@ -28,4 +28,8 @@ async fn call_to_parent_command(ctx: Context<'_>) -> anyhow::Result<()> {
     info!("{} called a parent command", ctx.author().name);
     ctx.say("requires subcommand see /help").await?;
     Ok(())
+}
+
+pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
+    vec![ping(), help(), general::version(), unranked()]
 }

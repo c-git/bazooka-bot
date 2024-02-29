@@ -3,9 +3,11 @@
 use std::fmt::Display;
 
 use anyhow::Context as _;
-use poise::serenity_prelude::{CacheHttp, User, UserId};
+use poise::serenity_prelude::{CacheHttp, User};
 
 use crate::Context;
+
+use super::UserIdNumber;
 
 pub mod protected_ops;
 
@@ -21,15 +23,15 @@ struct Ideas {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
 pub struct Idea {
-    creator: UserId,
+    creator: UserIdNumber,
     description: String,
-    voters: Vec<UserId>,
+    voters: Vec<UserIdNumber>,
 }
 
 impl Idea {
     fn new(user: &User, description: String) -> Idea {
         Self {
-            creator: user.id,
+            creator: user.id.into(),
             description,
             voters: Default::default(),
         }
@@ -58,7 +60,7 @@ impl Display for Ideas {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{}", Self::DISPLAY_HEADER)?;
         for (i, idea) in self.data.iter().enumerate() {
-            writeln!(f, "{i}. {idea}")?
+            writeln!(f, "{}. {idea}", i + 1)?
         }
         Ok(())
     }
@@ -88,14 +90,15 @@ impl Ideas {
     async fn verbose_display(&self, ctx: &Context<'_>) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
-        writeln!(result, "{}", Self::DISPLAY_HEADER)?;
+        writeln!(result, "{}\n", Self::DISPLAY_HEADER)?;
         for (i, idea) in self.data.iter().enumerate() {
             writeln!(
                 result,
-                "{i}. {idea} `{}`",
+                "{}. {idea} Suggested by: `{}`",
+                i + 1,
                 idea.creator.to_user(ctx).await?.name
             )?;
-            writeln!(result, "  - `{}`", idea.voters_as_string(ctx).await?)?;
+            writeln!(result, "` {} `\n", idea.voters_as_string(ctx).await?)?;
         }
         Ok(result)
     }

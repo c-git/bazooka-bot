@@ -11,6 +11,7 @@
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use anyhow::Context as _;
+use poise::serenity_prelude::{CacheHttp, User, UserId};
 use shuttle_persist::PersistInstance;
 use tracing::{error, info};
 
@@ -29,6 +30,27 @@ pub struct Data {
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 struct InternalData {
     unranked: Unranked,
+}
+
+/// Created to use in place of User or UserId from Framework because they
+// are not able to be deserialized from Bincode which shuttle-persist uses
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
+struct UserIdNumber(u64);
+
+impl UserIdNumber {
+    async fn to_user(self, cache_http: impl CacheHttp) -> anyhow::Result<User> {
+        Ok(self.to_user_id().to_user(cache_http).await?)
+    }
+
+    fn to_user_id(self) -> UserId {
+        UserId::from(self.0)
+    }
+}
+
+impl<T: AsRef<UserId>> From<T> for UserIdNumber {
+    fn from(value: T) -> Self {
+        Self(value.as_ref().get())
+    }
 }
 
 impl Data {

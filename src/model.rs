@@ -19,7 +19,7 @@ use tracing::{error, info};
 
 use self::unranked::Unranked;
 
-pub mod unranked;
+pub(crate) mod unranked;
 pub(crate) mod user_serde;
 
 #[derive(Debug)]

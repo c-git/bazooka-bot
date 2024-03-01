@@ -6,7 +6,7 @@ use tracing::{info, instrument};
 
 use crate::{
     commands::{call_to_parent_command, tracing_handler_end, tracing_handler_start, Context},
-    model::{unranked::IdeaId, user_serde::UserRecordSupport as _},
+    model::{unranked::ideas::IdeaId, user_serde::UserRecordSupport as _},
 };
 
 #[poise::command(

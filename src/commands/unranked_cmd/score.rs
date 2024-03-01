@@ -2,7 +2,7 @@
 
 use crate::{
     commands::{tracing_handler_end, tracing_handler_start},
-    model::{unranked::ScoreValue, user_serde::UserRecordSupport as _},
+    model::{unranked::scores::ScoreValue, user_serde::UserRecordSupport as _},
     Context,
 };
 use std::fmt::Debug;

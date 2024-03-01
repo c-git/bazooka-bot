@@ -3,7 +3,11 @@
 
 use std::sync::MutexGuard;
 
-use super::{super::Data, Idea, IdeaId, ScoreValue};
+use super::{
+    super::Data,
+    ideas::{Idea, IdeaId},
+    scores::ScoreValue,
+};
 use crate::{
     model::{
         user_serde::{UserIdNumber, UserRecord},

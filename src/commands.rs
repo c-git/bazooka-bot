@@ -46,7 +46,7 @@ pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
 async fn is_auth(ctx: Context<'_>) -> anyhow::Result<bool> {
     info!("START");
     let result;
-    let role_id = ctx.data().auth_role_id;
+    let role_id = ctx.data().shared_config.auth_role_id;
     if let Some(member) = ctx.author_member().await {
         result = member.roles.contains(&role_id);
         if !result {

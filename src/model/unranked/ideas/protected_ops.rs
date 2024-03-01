@@ -4,88 +4,84 @@
 use std::sync::MutexGuard;
 
 use crate::{
-    model::{user_serde::UserIdNumber, Data, InternalData},
+    model::{unranked::Unranked, user_serde::UserIdNumber},
     Context,
 };
 
-use super::{Idea, IdeaId};
+use super::{Idea, IdeaId, Ideas};
 
-impl Data {
-    /// Serves as the link to the private function that returns the guard
-    fn guard_idea(&self) -> anyhow::Result<MutexGuard<InternalData>> {
-        self.internal_data_guard()
+impl Unranked {
+    fn guard_idea(&self) -> anyhow::Result<MutexGuard<Ideas>> {
+        match self.ideas.lock() {
+            Ok(guard) => Ok(guard),
+            Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),
+        }
+    }
+    fn save_idea(&self, data: &Ideas) -> anyhow::Result<()> {
+        self.save(Ideas::DATA_KEY, data)
     }
 
-    pub(crate) fn unranked_idea_add(
+    pub(crate) fn idea_add(
         &self,
         user_id_number: UserIdNumber,
         description: String,
     ) -> anyhow::Result<()> {
         let mut guard = self.guard_idea()?;
-        guard.unranked.ideas.add(user_id_number, description);
-        self.save(&guard)?;
+        guard.add(user_id_number, description);
+        self.save_idea(&guard)?;
         Ok(())
     }
 
-    pub(crate) fn unranked_idea_edit(
+    pub(crate) fn idea_edit(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
         new_description: String,
     ) -> anyhow::Result<()> {
         let mut guard = self.guard_idea()?;
-        guard
-            .unranked
-            .ideas
-            .edit(id, user_id_number, new_description)?;
-        self.save(&guard)?;
+        guard.edit(id, user_id_number, new_description)?;
+        self.save_idea(&guard)?;
         Ok(())
     }
 
     /// Attempts to remove and return the Idea
-    pub(crate) fn unranked_idea_remove(
+    pub(crate) fn idea_remove(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
     ) -> anyhow::Result<Idea> {
         let mut guard = self.guard_idea()?;
-        let result = guard.unranked.ideas.remove(id, user_id_number)?;
-        self.save(&guard)?;
+        let result = guard.remove(id, user_id_number)?;
+        self.save_idea(&guard)?;
         Ok(result)
     }
 
     /// Returns true iff a change was made
-    pub(crate) fn unranked_idea_change_vote(
+    pub(crate) fn idea_change_vote(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<bool> {
         let mut guard = self.guard_idea()?;
-        let result = guard
-            .unranked
-            .ideas
-            .change_vote(id, user_id_number, is_add_vote)?;
-        self.save(&guard)?;
+        let result = guard.change_vote(id, user_id_number, is_add_vote)?;
+        self.save_idea(&guard)?;
         Ok(result)
     }
 
     /// Returns the number of votes changed
-    pub(crate) fn unranked_idea_change_vote_all(
+    pub(crate) fn idea_change_vote_all(
         &self,
         user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<usize> {
         let mut guard = self.guard_idea()?;
-        let result = guard
-            .unranked
-            .ideas
-            .change_vote_all(user_id_number, is_add_vote);
-        self.save(&guard)?;
+        let result = guard.change_vote_all(user_id_number, is_add_vote);
+        self.save_idea(&guard)?;
         Ok(result)
     }
 
-    pub(crate) async fn unranked_ideas_as_string(
+    pub(crate) async fn ideas_as_string(
         &self,
         ctx: &Context<'_>,
         is_verbose: bool,
@@ -93,10 +89,10 @@ impl Data {
         if is_verbose {
             // Ideas have to be cloned because the guard cannot be held across the await boundary because it is not send
             // Would be a bad idea to hold it anyway because that could lead to a deadlock
-            let ideas = { self.guard_idea()?.unranked.ideas.clone() };
+            let ideas = { self.guard_idea()?.clone() };
             ideas.verbose_display(ctx).await
         } else {
-            Ok(self.guard_idea()?.unranked.ideas.to_string())
+            Ok(self.guard_idea()?.to_string())
         }
     }
 }

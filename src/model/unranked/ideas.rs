@@ -4,7 +4,10 @@ use anyhow::{bail, Context as _};
 use poise::serenity_prelude::CacheHttp;
 use tracing::{info, warn};
 
-use crate::{model::user_serde::UserIdNumber, Context};
+use crate::{
+    model::{user_serde::UserIdNumber, PersistData as _, SharedConfig},
+    Context,
+};
 
 pub mod protected_ops;
 
@@ -104,6 +107,7 @@ impl IdeaId {
 }
 
 impl Ideas {
+    const DATA_KEY: &'static str = "ideas";
     const DISPLAY_HEADER: &'static str = "# Unranked Ideas";
     pub fn add(&mut self, user_id_number: UserIdNumber, description: String) {
         let value = Idea::new(user_id_number, description);
@@ -219,6 +223,10 @@ impl Ideas {
                 format!("Valid IDs are 1..{}", self.data.len())
             }
         )
+    }
+
+    pub(crate) fn new(shared_config: &SharedConfig) -> Self {
+        shared_config.persist.data_load_or_default(Self::DATA_KEY)
     }
 }
 

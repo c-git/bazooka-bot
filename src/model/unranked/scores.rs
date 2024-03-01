@@ -4,7 +4,10 @@ use anyhow::bail;
 use tracing::{error, info};
 
 use crate::{
-    model::user_serde::{UserIdNumber, UserName, UserRecord},
+    model::{
+        user_serde::{UserIdNumber, UserName, UserRecord},
+        PersistData, SharedConfig,
+    },
     RemoveElement as _,
 };
 
@@ -31,6 +34,7 @@ pub struct ScoreRecord {
 }
 
 impl Scores {
+    const DATA_KEY: &'static str = "scores";
     pub fn set_score(&mut self, user: UserRecord, score: ScoreValue) -> anyhow::Result<()> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
         self.cache()?;
@@ -159,5 +163,9 @@ impl Scores {
             self.message
         );
         self.message = msg;
+    }
+
+    pub(crate) fn new(shared_config: &SharedConfig) -> Self {
+        shared_config.persist.data_load_or_default(Self::DATA_KEY)
     }
 }

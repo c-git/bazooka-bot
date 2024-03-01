@@ -8,10 +8,7 @@
 //! functions that need to take the lock on the mutex inside of modules called
 //! `protected_ops`` with the rule that they may not call any other functions in the same module
 
-use std::{
-    sync::{Arc, Mutex, MutexGuard},
-    time::Instant,
-};
+use std::time::Instant;
 
 use anyhow::Context as _;
 use poise::serenity_prelude::RoleId;
@@ -26,54 +23,65 @@ pub(crate) mod user_serde;
 #[derive(Debug)]
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
-    internal: Arc<Mutex<InternalData>>,
+    pub unranked: Unranked,
+    pub shared_config: &'static SharedConfig,
+}
+
+#[derive(Debug)]
+pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
     persist: PersistInstance,
 }
 
-/// Stores the data used by the application
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
-struct InternalData {
-    unranked: Unranked,
+impl SharedConfig {
+    fn new(
+        start_instant: Instant,
+        auth_role_id: RoleId,
+        persist: PersistInstance,
+    ) -> &'static Self {
+        let result = Box::new(Self {
+            start_instant,
+            auth_role_id,
+            persist,
+        });
+        Box::leak(result)
+    }
 }
 
 impl Data {
-    const DATA_KEY: &'static str = "internal_data";
-    fn internal_data_guard(&self) -> anyhow::Result<MutexGuard<'_, InternalData>> {
-        match self.internal.lock() {
-            Ok(guard) => Ok(guard),
-            Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),
-        }
-    }
-
     pub fn new(persist: PersistInstance, auth_role_id: RoleId) -> Self {
-        let internal = Arc::new(Mutex::new(
-            match persist.load::<InternalData>(Self::DATA_KEY) {
-                Ok(data) => {
-                    info!("Data Loaded");
-                    data
-                }
-                Err(e) => {
-                    error!("failed to load data: {e}");
-                    Default::default()
-                }
-            },
-        ));
+        let shared_config = SharedConfig::new(Instant::now(), auth_role_id, persist);
         Data {
-            persist,
-            internal,
-            start_instant: Instant::now(),
-            auth_role_id,
+            unranked: Unranked::new(shared_config),
+            shared_config,
         }
     }
+}
 
-    fn save(&self, value: &InternalData) -> anyhow::Result<()> {
-        // TODO 3: Make save periodic instead of on every change
-        self.persist
-            .save(Self::DATA_KEY, value)
-            .context("failed to save data")?;
-        info!("Data Saved");
+pub(crate) trait PersistData {
+    fn data_load_or_default<T: for<'a> serde::Deserialize<'a> + Default>(&self, key: &str) -> T;
+    fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()>;
+}
+
+impl PersistData for PersistInstance {
+    fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
+        self.save(key, value)
+            .with_context(|| format!("failed to save {key} data"))?;
+        info!("{key} Data Saved");
         Ok(())
+    }
+
+    fn data_load_or_default<T: for<'a> serde::Deserialize<'a> + Default>(&self, key: &str) -> T {
+        match self.load::<T>(key) {
+            Ok(data) => {
+                info!("'{key}' data loaded successfully");
+                data
+            }
+            Err(e) => {
+                error!("failed to load '{key}' data. Error: {e}");
+                Default::default()
+            }
+        }
     }
 }

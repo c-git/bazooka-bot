@@ -30,8 +30,14 @@ pub async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "uptime", skip(ctx))]
 pub async fn uptime(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    ctx.say(ctx.data().start_instant.elapsed().to_human_time_string())
-        .await?;
+    ctx.say(
+        ctx.data()
+            .shared_config
+            .start_instant
+            .elapsed()
+            .to_human_time_string(),
+    )
+    .await?;
     tracing_handler_end()
 }
 

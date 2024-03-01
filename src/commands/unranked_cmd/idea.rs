@@ -37,7 +37,8 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     ctx.data()
-        .unranked_idea_add(ctx.author_id_number(), description)?;
+        .unranked
+        .idea_add(ctx.author_id_number(), description)?;
     display_ideas_with_msg(&ctx, "Idea Added").await?;
     tracing_handler_end()
 }
@@ -53,7 +54,8 @@ pub async fn edit(
     tracing_handler_start(&ctx).await;
     let id: IdeaId = id.into();
     ctx.data()
-        .unranked_idea_edit(id, ctx.author_id_number(), new_description)?;
+        .unranked
+        .idea_edit(id, ctx.author_id_number(), new_description)?;
     display_ideas_with_msg(&ctx, "Idea Updated").await?;
     tracing_handler_end()
 }
@@ -66,7 +68,8 @@ pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     let id: IdeaId = id.into();
     let old_idea = ctx
         .data()
-        .unranked_idea_remove(id, ctx.author_id_number())?;
+        .unranked
+        .idea_remove(id, ctx.author_id_number())?;
     display_ideas_with_msg(
         &ctx,
         format!(
@@ -121,7 +124,7 @@ pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Resu
 #[instrument(skip(ctx))]
 pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<()> {
     info!("START");
-    let ideas_as_string = ctx.data().unranked_ideas_as_string(ctx, is_verbose).await?;
+    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, is_verbose).await?;
     ctx.say(ideas_as_string).await?;
     tracing_handler_end()
 }
@@ -142,7 +145,8 @@ async fn change_vote(ctx: Context<'_>, id: IdeaId, is_add_vote: bool) -> anyhow:
     info!("START");
     let was_change_made =
         ctx.data()
-            .unranked_idea_change_vote(id, ctx.author_id_number(), is_add_vote)?;
+            .unranked
+            .idea_change_vote(id, ctx.author_id_number(), is_add_vote)?;
     display_ideas_with_msg(
         &ctx,
         format!(
@@ -160,7 +164,8 @@ async fn change_vote_all(ctx: Context<'_>, is_add_vote: bool) -> anyhow::Result<
     info!("START");
     let change_count = ctx
         .data()
-        .unranked_idea_change_vote_all(ctx.author_id_number(), is_add_vote)?;
+        .unranked
+        .idea_change_vote_all(ctx.author_id_number(), is_add_vote)?;
     display_ideas_with_msg(
         &ctx,
         format!(

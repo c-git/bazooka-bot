@@ -8,7 +8,7 @@ use tracing::{error, info, warn};
 
 use crate::{Context, RemoveElement as _};
 
-use super::UserIdNumber;
+use super::user_serde::{UserIdNumber, UserName};
 
 pub mod protected_ops;
 
@@ -32,9 +32,6 @@ pub struct Idea {
 
 pub type ScoreValue = i8;
 type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, Clone)]
-struct UserName(String);
 
 /// Users scores
 ///
@@ -388,17 +385,5 @@ impl From<NonZeroUsize> for IdeaId {
 impl Display for IdeaId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl Display for UserName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl<S: Into<String>> From<S> for UserName {
-    fn from(value: S) -> Self {
-        Self(value.into())
     }
 }

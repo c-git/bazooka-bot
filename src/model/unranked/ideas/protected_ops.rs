@@ -1,24 +1,18 @@
 //! This module exists to make it harder to get deadlocks by grouping functions that MUST NOT call each other.
-//! Makes use of the fact that it is a sub-module of data to access the private function from there to implement its functionality
+//! Makes use of the fact that it is a sub-module to access the private function to implement its functionality
 
 use std::sync::MutexGuard;
 
-use super::{
-    super::Data,
-    ideas::{Idea, IdeaId},
-    scores::ScoreValue,
-};
 use crate::{
-    model::{
-        user_serde::{UserIdNumber, UserRecord},
-        InternalData,
-    },
+    model::{user_serde::UserIdNumber, Data, InternalData},
     Context,
 };
 
+use super::{Idea, IdeaId};
+
 impl Data {
     /// Serves as the link to the private function that returns the guard
-    fn guard(&self) -> anyhow::Result<MutexGuard<InternalData>> {
+    fn guard_idea(&self) -> anyhow::Result<MutexGuard<InternalData>> {
         self.internal_data_guard()
     }
 
@@ -27,7 +21,7 @@ impl Data {
         user_id_number: UserIdNumber,
         description: String,
     ) -> anyhow::Result<()> {
-        let mut guard = self.guard()?;
+        let mut guard = self.guard_idea()?;
         guard.unranked.ideas.add(user_id_number, description);
         self.save(&guard)?;
         Ok(())
@@ -39,7 +33,7 @@ impl Data {
         user_id_number: UserIdNumber,
         new_description: String,
     ) -> anyhow::Result<()> {
-        let mut guard = self.guard()?;
+        let mut guard = self.guard_idea()?;
         guard
             .unranked
             .ideas
@@ -54,7 +48,7 @@ impl Data {
         id: IdeaId,
         user_id_number: UserIdNumber,
     ) -> anyhow::Result<Idea> {
-        let mut guard = self.guard()?;
+        let mut guard = self.guard_idea()?;
         let result = guard.unranked.ideas.remove(id, user_id_number)?;
         self.save(&guard)?;
         Ok(result)
@@ -67,7 +61,7 @@ impl Data {
         user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<bool> {
-        let mut guard = self.guard()?;
+        let mut guard = self.guard_idea()?;
         let result = guard
             .unranked
             .ideas
@@ -82,7 +76,7 @@ impl Data {
         user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<usize> {
-        let mut guard = self.guard()?;
+        let mut guard = self.guard_idea()?;
         let result = guard
             .unranked
             .ideas
@@ -99,47 +93,10 @@ impl Data {
         if is_verbose {
             // Ideas have to be cloned because the guard cannot be held across the await boundary because it is not send
             // Would be a bad idea to hold it anyway because that could lead to a deadlock
-            let ideas = { self.guard()?.unranked.ideas.clone() };
+            let ideas = { self.guard_idea()?.unranked.ideas.clone() };
             ideas.verbose_display(ctx).await
         } else {
-            Ok(self.guard()?.unranked.ideas.to_string())
+            Ok(self.guard_idea()?.unranked.ideas.to_string())
         }
-    }
-
-    pub(crate) fn unranked_score_set(
-        &self,
-        user: UserRecord,
-        score: ScoreValue,
-    ) -> anyhow::Result<()> {
-        let mut guard = self.guard()?;
-        guard.unranked.scores.set_score(user, score)?;
-        self.save(&guard)?;
-        Ok(())
-    }
-
-    /// Returns true iff score was removed
-    pub(crate) fn unranked_score_remove(&self, user: &UserRecord) -> anyhow::Result<bool> {
-        let mut guard = self.guard()?;
-        let result = guard.unranked.scores.remove_score(user)?;
-        self.save(&guard)?;
-        Ok(result)
-    }
-
-    pub(crate) fn unranked_scores_as_string(&self) -> anyhow::Result<String> {
-        let mut guard = self.guard()?;
-        let result = guard.unranked.scores.display()?;
-        // Note we do not save here because only thing that should change in scores is the cache
-        Ok(result)
-    }
-
-    pub(crate) fn unranked_score_message(
-        &self,
-        user_id_number: UserIdNumber,
-        msg: String,
-    ) -> anyhow::Result<()> {
-        let mut guard = self.guard()?;
-        guard.unranked.scores.set_message(user_id_number, msg);
-        self.save(&guard)?;
-        Ok(())
     }
 }

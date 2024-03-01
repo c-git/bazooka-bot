@@ -6,6 +6,8 @@ use tracing::{info, warn};
 
 use crate::{model::user_serde::UserIdNumber, Context};
 
+pub mod protected_ops;
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
 pub struct Ideas {
     data: Vec<Idea>,

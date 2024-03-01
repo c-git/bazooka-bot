@@ -8,6 +8,8 @@ use crate::{
     RemoveElement as _,
 };
 
+pub mod protected_ops;
+
 pub type ScoreValue = i8;
 type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
 

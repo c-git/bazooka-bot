@@ -165,12 +165,20 @@ impl Scores {
         use std::fmt::Write as _;
         let mut result = String::new();
         writeln!(result, "# UNRANKED CHALLENGE")?;
-        writeln!(result, "{}\nRankings:", self.message)?;
+        writeln!(result, "{}\n\nRankings:", self.message)?;
         for (score, users) in self.cache()?.iter().rev() {
             let user_names: Vec<String> = users.iter().map(|x| format!("{x}",)).collect();
             writeln!(result, "{} WINS - {}", score, user_names.join(", "))?;
         }
         Ok(result)
+    }
+
+    fn set_message(&mut self, user_id_number: UserIdNumber, msg: String) {
+        info!(
+            "User# {user_id_number} is replacing scores message from {:?} to {msg:?}",
+            self.message
+        );
+        self.message = msg;
     }
 }
 

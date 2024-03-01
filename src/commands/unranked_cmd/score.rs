@@ -12,7 +12,7 @@ use tracing::{info, instrument};
     prefix_command,
     slash_command,
     track_edits,
-    subcommands("set", "remove", "leader_board")
+    subcommands("set", "remove", "leader_board", "message")
 )]
 #[instrument(name = "unranked-score", skip(ctx))]
 /// Commands related to scoring during the event and if called using `bbur score` sets the score
@@ -54,6 +54,18 @@ pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Set or overwrite your score
 pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     do_set_score(ctx, score).await
+}
+
+// TODO 1: Restrict access
+#[poise::command(prefix_command, slash_command, track_edits)]
+#[instrument(name = "unranked-score-message", skip(ctx))]
+/// Set message displayed with scores (Replaces current message)
+pub async fn message(ctx: Context<'_>, #[rest] msg: String) -> anyhow::Result<()> {
+    tracing_handler_start(&ctx).await;
+    ctx.data()
+        .unranked_score_message(ctx.author_id_number(), msg)?;
+    display_scores_with_msg(&ctx, "Message Set").await?;
+    tracing_handler_end()
 }
 
 async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {

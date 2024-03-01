@@ -124,7 +124,18 @@ impl Data {
     pub(crate) fn unranked_scores_as_string(&self) -> anyhow::Result<String> {
         let mut guard = self.guard()?;
         let result = guard.unranked.scores.display()?;
-        self.save(&guard)?;
+        // Note we do not save here because only thing that should change in scores is the cache
         Ok(result)
+    }
+
+    pub(crate) fn unranked_score_message(
+        &self,
+        user_id_number: UserIdNumber,
+        msg: String,
+    ) -> anyhow::Result<()> {
+        let mut guard = self.guard()?;
+        guard.unranked.scores.set_message(user_id_number, msg);
+        self.save(&guard)?;
+        Ok(())
     }
 }

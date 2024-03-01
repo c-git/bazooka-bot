@@ -11,6 +11,7 @@ use tracing::{info, instrument};
 #[poise::command(
     prefix_command,
     slash_command,
+    track_edits,
     subcommands("set", "remove", "leader_board")
 )]
 #[instrument(name = "unranked-score", skip(ctx))]
@@ -46,7 +47,7 @@ pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_end()
 }
 
-#[poise::command(prefix_command, slash_command)]
+#[poise::command(prefix_command, slash_command, track_edits)]
 /// Set or overwrite your score
 pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     do_set_score(ctx, score).await

@@ -19,6 +19,7 @@ async fn main(
     let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
     let guild_id: GuildId = secret_store.access_secret_parse("GUILD_ID")?;
     let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
+    let is_production = std::env::var("SHUTTLE").is_ok();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -35,8 +36,18 @@ async fn main(
         })
         .setup(move |ctx, ready, framework| {
             Box::pin(async move {
-                info!("Going to register guild: {guild_id}");
-                poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id)
+                if is_production {
+                    info!("Production run detected going to register globally");
+                    poise::builtins::register_globally(ctx, &framework.options().commands)
+                        .await
+                        .context("failed to register the bot globally")?;
+                } else {
+                    info!("Development run detected going to register guild: {guild_id}");
+                    poise::builtins::register_in_guild(
+                        ctx,
+                        &framework.options().commands,
+                        guild_id,
+                    )
                     .await
                     .with_context(|| {
                         format!(
@@ -44,7 +55,7 @@ async fn main(
                             ready.user.name
                         )
                     })?;
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                }
                 info!("{} is connected!", ready.user.name);
                 Ok(Data::new(persist, auth_role_id))
             })

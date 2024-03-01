@@ -81,11 +81,19 @@ impl Data {
         }
     }
 
-    pub(crate) fn unranked_score_set(&self, user: User, score: ScoreValue) -> anyhow::Result<()> {
+    pub(crate) fn unranked_score_set(&self, user: &User, score: ScoreValue) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
         guard.unranked.scores.set_score(user, score)?;
         self.save(&guard)?;
         Ok(())
+    }
+
+    /// Returns true iff score was removed
+    pub(crate) fn unranked_score_remove(&self, user: &User) -> anyhow::Result<bool> {
+        let mut guard = self.guard()?;
+        let result = guard.unranked.scores.remove_score(user)?;
+        self.save(&guard)?;
+        Ok(result)
     }
 
     pub(crate) fn unranked_scores_as_string(&self) -> anyhow::Result<String> {

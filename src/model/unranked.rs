@@ -55,7 +55,7 @@ pub struct ScoreRecord {
 }
 
 impl Scores {
-    pub fn set_score(&mut self, user: User, score: ScoreValue) -> anyhow::Result<()> {
+    pub fn set_score(&mut self, user: &User, score: ScoreValue) -> anyhow::Result<()> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
         self.cache()?;
 
@@ -72,28 +72,24 @@ impl Scores {
                     // Update user record
                     record.score = score;
 
-                    self.remove_user_from_cache(&old_score, &user)?;
+                    let user_name = record.user_name.clone();
+                    self.remove_user_from_cache(&old_score, &user_name)?;
 
                     // Add user to new list in cache
-                    self.cache()?
-                        .entry(score)
-                        .or_default()
-                        .push(user.name.into());
+                    self.cache()?.entry(score).or_default().push(user_name);
                 }
                 return Ok(());
             }
         }
 
         // New user, not found. Create record and update cache
+        let user_name: UserName = user.name.clone().into();
         self.records.push(ScoreRecord {
             user_id_number,
-            user_name: user.name.clone().into(),
+            user_name: user_name.clone(),
             score,
         });
-        self.cache()?
-            .entry(score)
-            .or_default()
-            .push(user.name.into());
+        self.cache()?.entry(score).or_default().push(user_name);
         Ok(())
     }
 
@@ -103,7 +99,7 @@ impl Scores {
     fn remove_user_from_cache(
         &mut self,
         score_in_cache: &ScoreValue,
-        user: &User,
+        user: &UserName,
     ) -> Result<(), anyhow::Error> {
         if self.cache.is_none() {
             error!("Attempt to remove from the cache while it does not exist");
@@ -112,7 +108,7 @@ impl Scores {
         match self.cache()?.get_mut(score_in_cache) {
             Some(users) => {
                 // Remove user from their current location
-                users.remove_element(&user.name.clone().into());
+                users.remove_element(user);
                 if users.is_empty() {
                     self.cache()?.remove(score_in_cache);
                 }
@@ -150,7 +146,7 @@ impl Scores {
     }
 
     /// Removes the score if it exists and returns true iff the score was removed
-    pub fn remove_score(&mut self, user: User) -> anyhow::Result<bool> {
+    pub fn remove_score(&mut self, user: &User) -> anyhow::Result<bool> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
         self.cache()?;
         let user_id_number = user.id.into();
@@ -164,7 +160,7 @@ impl Scores {
 
         Ok(if let Some(i) = index {
             let record = self.records.remove(i);
-            self.remove_user_from_cache(&record.score, &user)?;
+            self.remove_user_from_cache(&record.score, &record.user_name)?;
             true
         } else {
             // User not found

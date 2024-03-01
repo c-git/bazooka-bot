@@ -8,11 +8,15 @@ use crate::{
 use std::fmt::Debug;
 use tracing::{info, instrument};
 
-#[poise::command(prefix_command, slash_command, subcommands("set", "remove", "results"))]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    subcommands("set", "remove", "leader_board")
+)]
 #[instrument(name = "unranked-score", skip(ctx))]
 /// Commands related to scoring during the event and if called using `bbur score` sets the score
 pub async fn score(ctx: Context<'_>, value: ScoreValue) -> anyhow::Result<()> {
-    set_score(ctx, value).await
+    do_set_score(ctx, value).await
 }
 
 #[poise::command(prefix_command, slash_command)]
@@ -20,27 +24,37 @@ pub async fn score(ctx: Context<'_>, value: ScoreValue) -> anyhow::Result<()> {
 /// Remove your score
 pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx);
-    todo!()
+    let did_remove = ctx.data().unranked_score_remove(ctx.author())?;
+    display_scores_with_msg(
+        &ctx,
+        if did_remove {
+            "Score Removed"
+        } else {
+            "Score not Found"
+        },
+    )
+    .await?;
+    tracing_handler_end()
 }
 
-#[poise::command(prefix_command, slash_command)]
-#[instrument(name = "unranked-score-results", skip(ctx))]
-/// Show the current score results
-pub async fn results(ctx: Context<'_>) -> anyhow::Result<()> {
+#[poise::command(prefix_command, slash_command, aliases("disp"))]
+#[instrument(name = "unranked-score-leader_board", skip(ctx))]
+/// Show the current leader_board
+pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx);
-    todo!()
+    display_scores(&ctx).await?;
+    tracing_handler_end()
 }
 
 #[poise::command(prefix_command, slash_command)]
-#[instrument(name = "unranked-score-set", skip(ctx))]
 /// Set or overwrite your score
 pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
-    set_score(ctx, score).await
+    do_set_score(ctx, score).await
 }
 
-async fn set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
+async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     tracing_handler_start(&ctx);
-    ctx.data().unranked_score_set(ctx.author().clone(), score)?;
+    ctx.data().unranked_score_set(ctx.author(), score)?;
     display_scores_with_msg(&ctx, "Score Set").await?;
     tracing_handler_end()
 }

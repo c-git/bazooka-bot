@@ -81,7 +81,7 @@ impl Idea {
 
 impl Display for Idea {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} - ({})", self.description, self.voters.len())
+        write!(f, "{} ({} votes)", self.description, self.voters.len())
     }
 }
 impl Display for Ideas {

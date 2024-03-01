@@ -1,7 +1,7 @@
 //! Groups the commands related to the scoring functionality for unranked
 
 use crate::{
-    commands::{tracing_handler_end, tracing_handler_start},
+    commands::{is_auth, tracing_handler_end, tracing_handler_start},
     model::{unranked::scores::ScoreValue, user_serde::UserRecordSupport as _},
     Context,
 };
@@ -56,8 +56,7 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     do_set_score(ctx, score).await
 }
 
-// TODO 1: Restrict access
-#[poise::command(prefix_command, slash_command, track_edits)]
+#[poise::command(prefix_command, slash_command, track_edits, check = "is_auth")]
 #[instrument(name = "unranked-score-message", skip(ctx))]
 /// Set message displayed with scores (Replaces current message)
 pub async fn message(ctx: Context<'_>, #[rest] msg: String) -> anyhow::Result<()> {

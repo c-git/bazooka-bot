@@ -14,6 +14,7 @@ use std::{
 };
 
 use anyhow::Context as _;
+use poise::serenity_prelude::RoleId;
 use shuttle_persist::PersistInstance;
 use tracing::{error, info};
 
@@ -27,6 +28,7 @@ pub(crate) mod user_serde;
 pub struct Data {
     internal: Arc<Mutex<InternalData>>,
     pub start_instant: Instant,
+    pub auth_role_id: RoleId,
     persist: PersistInstance,
 }
 
@@ -45,7 +47,7 @@ impl Data {
         }
     }
 
-    pub fn new(persist: PersistInstance) -> Self {
+    pub fn new(persist: PersistInstance, auth_role_id: RoleId) -> Self {
         let internal = Arc::new(Mutex::new(
             match persist.load::<InternalData>(Self::DATA_KEY) {
                 Ok(data) => {
@@ -62,6 +64,7 @@ impl Data {
             persist,
             internal,
             start_instant: Instant::now(),
+            auth_role_id,
         }
     }
 

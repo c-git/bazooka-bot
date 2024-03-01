@@ -1,6 +1,7 @@
 //! Groups all the bot commands together. These then delegate to the model as needed
 
-use tracing::{error, info};
+use poise::serenity_prelude::Mentionable;
+use tracing::{error, info, instrument, warn};
 
 use crate::{commands::general::uptime, AuthorPreferredDisplay as _, Context, Data};
 
@@ -39,4 +40,37 @@ async fn call_to_parent_command(ctx: Context<'_>) -> anyhow::Result<()> {
 
 pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
     vec![ping(), help(), general::version(), uptime(), unranked()]
+}
+
+#[instrument(skip(ctx))]
+async fn is_auth(ctx: Context<'_>) -> anyhow::Result<bool> {
+    info!("START");
+    let result;
+    let role_id = ctx.data().auth_role_id;
+    if let Some(member) = ctx.author_member().await {
+        result = member.roles.contains(&role_id);
+        if !result {
+            ctx.reply(format!(
+                "You don't have permission to run this command. Please see someone from {} for assistance",
+                role_id.mention()
+            ))
+            .await?;
+        }
+    } else {
+        result = false;
+        warn!(
+            "Unable to get membership for {:?}, likely sent in a DM.",
+            ctx.author().name
+        );
+        ctx.say("This command is only allowed from a server")
+            .await?;
+    };
+    warn!(
+        "User: {:?} ({}) attempted to execute {:?} but they did not have role# {role_id}.",
+        ctx.author().name,
+        ctx.author().id,
+        ctx.command().qualified_name,
+    );
+    info!("END");
+    Ok(result)
 }

@@ -15,7 +15,7 @@ async fn main(
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());
-    // Get the discord token and guild_id set in `Secrets.toml`
+    // Get values from Secret Store
     let discord_token = secret_store
         .get("DISCORD_TOKEN")
         .context("'DISCORD_TOKEN' was not found")?;
@@ -24,6 +24,11 @@ async fn main(
         .context("'GUILD_ID' was not found")?
         .parse()
         .context("failed to parse GUILD_ID")?;
+    let auth_role_id = secret_store
+        .get("AUTH_ROLE_ID")
+        .context("'AUTH_ROLE_ID' was not found")?
+        .parse()
+        .context("failed to parse AUTH_ROLE_ID")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -54,7 +59,7 @@ async fn main(
                     )
                 })?;
                 info!("{} is connected!", ready.user.name);
-                Ok(Data::new(persist))
+                Ok(Data::new(persist, auth_role_id))
             })
         })
         .build();

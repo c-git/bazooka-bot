@@ -6,7 +6,7 @@ use anyhow::{bail, Context as _};
 use poise::serenity_prelude::{CacheHttp, User};
 use tracing::{error, info, warn};
 
-use crate::Context;
+use crate::{Context, RemoveElement as _};
 
 use super::UserIdNumber;
 
@@ -388,26 +388,6 @@ impl From<NonZeroUsize> for IdeaId {
 impl Display for IdeaId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-trait RemoveElement<T: PartialEq> {
-    /// Returns true iff the element was found and removed
-    fn remove_element(&mut self, element: &T) -> bool;
-}
-
-impl<T: PartialEq> RemoveElement<T> for Vec<T> {
-    fn remove_element(&mut self, element: &T) -> bool {
-        let index = self
-            .iter()
-            .enumerate()
-            .find_map(|(i, x)| if x == element { Some(i) } else { None });
-        if let Some(i) = index {
-            self.remove(i);
-            true
-        } else {
-            false
-        }
     }
 }
 

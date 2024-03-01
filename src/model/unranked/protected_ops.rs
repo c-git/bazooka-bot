@@ -81,24 +81,16 @@ impl Data {
         }
     }
 
-    pub(crate) async fn unranked_score_set(
-        &self,
-        ctx: &Context<'_>,
-        user: User,
-        score: ScoreValue,
-    ) -> anyhow::Result<()> {
+    pub(crate) fn unranked_score_set(&self, user: User, score: ScoreValue) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
-        guard.unranked.scores.set_score(ctx, user, score).await?;
+        guard.unranked.scores.set_score(user, score)?;
         self.save(&guard)?;
         Ok(())
     }
 
-    pub(crate) async fn unranked_scores_as_string(
-        &self,
-        ctx: &Context<'_>,
-    ) -> anyhow::Result<String> {
+    pub(crate) fn unranked_scores_as_string(&self) -> anyhow::Result<String> {
         let mut guard = self.guard()?;
-        let result = guard.unranked.scores.display(ctx).await?;
+        let result = guard.unranked.scores.display()?;
         self.save(&guard)?;
         Ok(result)
     }

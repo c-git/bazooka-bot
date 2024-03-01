@@ -31,12 +31,15 @@ pub struct Idea {
 }
 
 pub type ScoreValue = i8;
-type ScoresCache = BTreeMap<ScoreValue, Vec<User>>;
+type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, Clone)]
+struct UserName(String);
 
 /// Users scores
 ///
 /// Assumes that each user has at most one record
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct Scores {
     pub message: String,
     records: Vec<ScoreRecord>,
@@ -44,21 +47,17 @@ pub struct Scores {
     cache: Option<ScoresCache>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ScoreRecord {
     user_id_number: UserIdNumber,
+    user_name: UserName,
     score: ScoreValue,
 }
 
 impl Scores {
-    pub async fn set_score(
-        &mut self,
-        ctx: &Context<'_>,
-        user: User,
-        score: ScoreValue,
-    ) -> anyhow::Result<()> {
+    pub fn set_score(&mut self, user: User, score: ScoreValue) -> anyhow::Result<()> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
-        self.cache(ctx).await?;
+        self.cache()?;
 
         // Check if user already exists in the records and update
         // Assumes that the user exits at most once and this is ensured by this being the only way to add a user
@@ -73,10 +72,13 @@ impl Scores {
                     // Update user record
                     record.score = score;
 
-                    self.remove_user_from_cache(ctx, &old_score, &user).await?;
+                    self.remove_user_from_cache(&old_score, &user)?;
 
                     // Add user to new list in cache
-                    self.cache(ctx).await?.entry(score).or_default().push(user);
+                    self.cache()?
+                        .entry(score)
+                        .or_default()
+                        .push(user.name.into());
                 }
                 return Ok(());
             }
@@ -85,18 +87,21 @@ impl Scores {
         // New user, not found. Create record and update cache
         self.records.push(ScoreRecord {
             user_id_number,
+            user_name: user.name.clone().into(),
             score,
         });
-        self.cache(ctx).await?.entry(score).or_default().push(user);
+        self.cache()?
+            .entry(score)
+            .or_default()
+            .push(user.name.into());
         Ok(())
     }
 
     /// Removes a user from the cache which means this function depends on the cache existing
     ///
     /// Should be called after the source data is updated in case of errors that busting the cache will lead to the data being updated
-    async fn remove_user_from_cache(
+    fn remove_user_from_cache(
         &mut self,
-        ctx: &Context<'_>,
         score_in_cache: &ScoreValue,
         user: &User,
     ) -> Result<(), anyhow::Error> {
@@ -104,12 +109,12 @@ impl Scores {
             error!("Attempt to remove from the cache while it does not exist");
             bail!("Internal Error. Please try again.");
         }
-        match self.cache(ctx).await?.get_mut(score_in_cache) {
+        match self.cache()?.get_mut(score_in_cache) {
             Some(users) => {
                 // Remove user from their current location
-                users.remove_element(user);
+                users.remove_element(&user.name.clone().into());
                 if users.is_empty() {
-                    self.cache(ctx).await?.remove(score_in_cache);
+                    self.cache()?.remove(score_in_cache);
                 }
             }
             None => {
@@ -124,17 +129,17 @@ impl Scores {
     }
 
     /// Returns a reference to the cache, filling it if it doesn't exist
-    async fn cache(&mut self, ctx: &Context<'_>) -> anyhow::Result<&mut ScoresCache> {
+    fn cache(&mut self) -> anyhow::Result<&mut ScoresCache> {
         if self.cache.is_none() {
             info!(
                 "Scores cache is empty going to fill. {} records found",
                 self.records.len()
             );
-            let mut map: BTreeMap<i8, Vec<User>> = BTreeMap::new();
+            let mut map: ScoresCache = BTreeMap::new();
             for record in self.records.iter() {
                 map.entry(record.score)
                     .or_default()
-                    .push(record.user_id_number.to_user(ctx).await?);
+                    .push(record.user_name.clone());
             }
             self.cache = Some(map);
         }
@@ -145,9 +150,9 @@ impl Scores {
     }
 
     /// Removes the score if it exists and returns true iff the score was removed
-    pub async fn remove_score(&mut self, ctx: &Context<'_>, user: User) -> anyhow::Result<bool> {
+    pub fn remove_score(&mut self, user: User) -> anyhow::Result<bool> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
-        self.cache(ctx).await?;
+        self.cache()?;
         let user_id_number = user.id.into();
         let index = self.records.iter().enumerate().find_map(|(i, x)| {
             if x.user_id_number == user_id_number {
@@ -159,8 +164,7 @@ impl Scores {
 
         Ok(if let Some(i) = index {
             let record = self.records.remove(i);
-            self.remove_user_from_cache(ctx, &record.score, &user)
-                .await?;
+            self.remove_user_from_cache(&record.score, &user)?;
             true
         } else {
             // User not found
@@ -171,13 +175,13 @@ impl Scores {
     /// Returns a string representation of the scores
     ///
     /// Wasn't able to use Display trait because we need mutable access
-    pub async fn display(&mut self, ctx: &Context<'_>) -> anyhow::Result<String> {
+    pub fn display(&mut self) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
         writeln!(result, "# UNRANKED CHALLENGE")?;
         writeln!(result, "{}\nRankings:", self.message)?;
-        for (score, users) in self.cache(ctx).await?.iter().rev() {
-            let user_names: Vec<String> = users.iter().map(|x| format!("`{}`", x.name)).collect();
+        for (score, users) in self.cache()?.iter().rev() {
+            let user_names: Vec<String> = users.iter().map(|x| format!("`{x}`",)).collect();
             writeln!(result, "{} WINS - {}", score, user_names.join(", "))?;
         }
         Ok(result)
@@ -408,5 +412,17 @@ impl<T: PartialEq> RemoveElement<T> for Vec<T> {
         } else {
             false
         }
+    }
+}
+
+impl Display for UserName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl<S: Into<String>> From<S> for UserName {
+    fn from(value: S) -> Self {
+        Self(value.into())
     }
 }

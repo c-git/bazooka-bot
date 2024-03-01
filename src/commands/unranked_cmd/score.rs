@@ -40,9 +40,7 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 
 async fn set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     tracing_handler_start(&ctx);
-    ctx.data()
-        .unranked_score_set(&ctx, ctx.author().clone(), score)
-        .await?;
+    ctx.data().unranked_score_set(ctx.author().clone(), score)?;
     display_scores_with_msg(&ctx, "Score Set").await?;
     tracing_handler_end()
 }
@@ -59,7 +57,6 @@ async fn display_scores_with_msg<S: Into<String> + Debug>(
 }
 
 async fn display_scores(ctx: &Context<'_>) -> anyhow::Result<()> {
-    ctx.say(ctx.data().unranked_scores_as_string(ctx).await?)
-        .await;
+    ctx.say(ctx.data().unranked_scores_as_string()?).await?;
     Ok(())
 }

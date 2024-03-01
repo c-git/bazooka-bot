@@ -50,6 +50,7 @@ pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
 }
 
 #[poise::command(prefix_command, slash_command, track_edits)]
+#[instrument(name = "unranked-score-set", skip(ctx))]
 /// Set or overwrite your score
 pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     do_set_score(ctx, score).await

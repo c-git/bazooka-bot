@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.68"
+human-time = "0.1.6"
 poise = "0.6.1"
 serde = { version = "1.0.197", features = ["derive"] }
 shuttle-persist = "0.39.0"

@@ -26,7 +26,7 @@ pub(crate) mod user_serde;
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
     internal: Arc<Mutex<InternalData>>,
-    start_instant: Instant,
+    pub start_instant: Instant,
     persist: PersistInstance,
 }
 
@@ -72,9 +72,5 @@ impl Data {
             .context("failed to save data")?;
         info!("Data Saved");
         Ok(())
-    }
-
-    pub fn start_instant(&self) -> &Instant {
-        &self.start_instant
     }
 }

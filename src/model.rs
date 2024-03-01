@@ -67,8 +67,8 @@ pub(crate) trait PersistData {
 impl PersistData for PersistInstance {
     fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
         self.save(key, value)
-            .with_context(|| format!("failed to save {key} data"))?;
-        info!("{key} Data Saved");
+            .with_context(|| format!("failed to save '{key}' data"))?;
+        info!("'{key}' data saved");
         Ok(())
     }
 

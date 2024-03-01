@@ -12,7 +12,15 @@ use crate::{
 #[instrument(name = "ping", skip(ctx))]
 pub async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    ctx.say("pong!").await?;
+    let latency = ctx.ping().await;
+    if latency.is_zero() {
+        info!("latency not available yet");
+        ctx.say("pong!").await?;
+    } else {
+        let msg = format!("pong! Bot gateway heartbeat latency is {latency:?}");
+        info!(msg);
+        ctx.say(msg).await?;
+    }
     tracing_handler_end()
 }
 

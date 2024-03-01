@@ -5,7 +5,7 @@ use std::sync::MutexGuard;
 
 use poise::serenity_prelude::User;
 
-use super::{super::Data, Idea, IdeaId};
+use super::{super::Data, Idea, IdeaId, ScoreValue};
 use crate::{model::InternalData, Context};
 
 impl Data {
@@ -79,5 +79,27 @@ impl Data {
         } else {
             Ok(self.guard()?.unranked.ideas.to_string())
         }
+    }
+
+    pub(crate) async fn unranked_score_set(
+        &self,
+        ctx: &Context<'_>,
+        user: User,
+        score: ScoreValue,
+    ) -> anyhow::Result<()> {
+        let mut guard = self.guard()?;
+        guard.unranked.scores.set_score(ctx, user, score).await?;
+        self.save(&guard)?;
+        Ok(())
+    }
+
+    pub(crate) async fn unranked_scores_as_string(
+        &self,
+        ctx: &Context<'_>,
+    ) -> anyhow::Result<String> {
+        let mut guard = self.guard()?;
+        let result = guard.unranked.scores.display(ctx).await?;
+        self.save(&guard)?;
+        Ok(result)
     }
 }

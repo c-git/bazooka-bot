@@ -22,6 +22,7 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
   - [x] `results`
   - [ ] `other_set(user, score)` (Auth Req)
   - [ ] `other_remove(user)` (Auth Req)
+  - [ ] `set_message(message)` (Auth Req)
 - [x] `/unranked schedule_reset(date_time)` (Auth Req)
 
 ## Scheduled Actions

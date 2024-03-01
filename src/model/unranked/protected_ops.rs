@@ -3,10 +3,14 @@
 
 use std::sync::MutexGuard;
 
-use poise::serenity_prelude::User;
-
 use super::{super::Data, Idea, IdeaId, ScoreValue};
-use crate::{model::InternalData, Context};
+use crate::{
+    model::{
+        user_serde::{UserIdNumber, UserRecord},
+        InternalData,
+    },
+    Context,
+};
 
 impl Data {
     /// Serves as the link to the private function that returns the guard
@@ -14,9 +18,13 @@ impl Data {
         self.internal_data_guard()
     }
 
-    pub(crate) fn unranked_idea_add(&self, user: &User, description: String) -> anyhow::Result<()> {
+    pub(crate) fn unranked_idea_add(
+        &self,
+        user_id_number: UserIdNumber,
+        description: String,
+    ) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
-        guard.unranked.ideas.add(user, description);
+        guard.unranked.ideas.add(user_id_number, description);
         self.save(&guard)?;
         Ok(())
     }
@@ -24,19 +32,26 @@ impl Data {
     pub(crate) fn unranked_idea_edit(
         &self,
         id: IdeaId,
-        user: &User,
+        user_id_number: UserIdNumber,
         new_description: String,
     ) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
-        guard.unranked.ideas.edit(id, user, new_description)?;
+        guard
+            .unranked
+            .ideas
+            .edit(id, user_id_number, new_description)?;
         self.save(&guard)?;
         Ok(())
     }
 
     /// Attempts to remove and return the Idea
-    pub(crate) fn unranked_idea_remove(&self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
+    pub(crate) fn unranked_idea_remove(
+        &self,
+        id: IdeaId,
+        user_id_number: UserIdNumber,
+    ) -> anyhow::Result<Idea> {
         let mut guard = self.guard()?;
-        let result = guard.unranked.ideas.remove(id, user)?;
+        let result = guard.unranked.ideas.remove(id, user_id_number)?;
         self.save(&guard)?;
         Ok(result)
     }
@@ -45,11 +60,14 @@ impl Data {
     pub(crate) fn unranked_idea_change_vote(
         &self,
         id: IdeaId,
-        user: &User,
+        user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<bool> {
         let mut guard = self.guard()?;
-        let result = guard.unranked.ideas.change_vote(id, user, is_add_vote)?;
+        let result = guard
+            .unranked
+            .ideas
+            .change_vote(id, user_id_number, is_add_vote)?;
         self.save(&guard)?;
         Ok(result)
     }
@@ -57,11 +75,14 @@ impl Data {
     /// Returns the number of votes changed
     pub(crate) fn unranked_idea_change_vote_all(
         &self,
-        user: &User,
+        user_id_number: UserIdNumber,
         is_add_vote: bool,
     ) -> anyhow::Result<usize> {
         let mut guard = self.guard()?;
-        let result = guard.unranked.ideas.change_vote_all(user, is_add_vote);
+        let result = guard
+            .unranked
+            .ideas
+            .change_vote_all(user_id_number, is_add_vote);
         self.save(&guard)?;
         Ok(result)
     }
@@ -81,7 +102,11 @@ impl Data {
         }
     }
 
-    pub(crate) fn unranked_score_set(&self, user: &User, score: ScoreValue) -> anyhow::Result<()> {
+    pub(crate) fn unranked_score_set(
+        &self,
+        user: UserRecord,
+        score: ScoreValue,
+    ) -> anyhow::Result<()> {
         let mut guard = self.guard()?;
         guard.unranked.scores.set_score(user, score)?;
         self.save(&guard)?;
@@ -89,7 +114,7 @@ impl Data {
     }
 
     /// Returns true iff score was removed
-    pub(crate) fn unranked_score_remove(&self, user: &User) -> anyhow::Result<bool> {
+    pub(crate) fn unranked_score_remove(&self, user: &UserRecord) -> anyhow::Result<bool> {
         let mut guard = self.guard()?;
         let result = guard.unranked.scores.remove_score(user)?;
         self.save(&guard)?;

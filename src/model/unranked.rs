@@ -3,12 +3,12 @@
 use std::{collections::BTreeMap, fmt::Display, num::NonZeroUsize};
 
 use anyhow::{bail, Context as _};
-use poise::serenity_prelude::{CacheHttp, User};
+use poise::serenity_prelude::CacheHttp;
 use tracing::{error, info, warn};
 
 use crate::{Context, RemoveElement as _};
 
-use super::user_serde::{UserIdNumber, UserName};
+use super::user_serde::{UserIdNumber, UserName, UserRecord};
 
 pub mod protected_ops;
 
@@ -46,22 +46,20 @@ pub struct Scores {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ScoreRecord {
-    user_id_number: UserIdNumber,
-    user_name: UserName,
+    user: UserRecord,
     score: ScoreValue,
 }
 
 impl Scores {
-    pub fn set_score(&mut self, user: &User, score: ScoreValue) -> anyhow::Result<()> {
+    pub fn set_score(&mut self, user: UserRecord, score: ScoreValue) -> anyhow::Result<()> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
         self.cache()?;
 
         // Check if user already exists in the records and update
         // Assumes that the user exits at most once and this is ensured by this being the only way to add a user
         // If invalid data is loaded that breaks this invariant then the output can be unexpected
-        let user_id_number: UserIdNumber = user.id.into();
         for record in self.records.iter_mut() {
-            if record.user_id_number == user_id_number {
+            if record.user.id_number == user.id_number {
                 // User found. Update score if different and update cache
                 if record.score != score {
                     let old_score = record.score;
@@ -69,7 +67,7 @@ impl Scores {
                     // Update user record
                     record.score = score;
 
-                    let user_name = record.user_name.clone();
+                    let user_name = record.user.name.clone();
                     self.remove_user_from_cache(&old_score, &user_name)?;
 
                     // Add user to new list in cache
@@ -80,12 +78,8 @@ impl Scores {
         }
 
         // New user, not found. Create record and update cache
-        let user_name: UserName = user.name.clone().into();
-        self.records.push(ScoreRecord {
-            user_id_number,
-            user_name: user_name.clone(),
-            score,
-        });
+        let user_name = user.name.clone();
+        self.records.push(ScoreRecord { user, score });
         self.cache()?.entry(score).or_default().push(user_name);
         Ok(())
     }
@@ -132,7 +126,7 @@ impl Scores {
             for record in self.records.iter() {
                 map.entry(record.score)
                     .or_default()
-                    .push(record.user_name.clone());
+                    .push(record.user.name.clone());
             }
             self.cache = Some(map);
         }
@@ -143,12 +137,11 @@ impl Scores {
     }
 
     /// Removes the score if it exists and returns true iff the score was removed
-    pub fn remove_score(&mut self, user: &User) -> anyhow::Result<bool> {
+    pub fn remove_score(&mut self, user: &UserRecord) -> anyhow::Result<bool> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
         self.cache()?;
-        let user_id_number = user.id.into();
         let index = self.records.iter().enumerate().find_map(|(i, x)| {
-            if x.user_id_number == user_id_number {
+            if x.user.id_number == user.id_number {
                 Some(i)
             } else {
                 None
@@ -157,7 +150,7 @@ impl Scores {
 
         Ok(if let Some(i) = index {
             let record = self.records.remove(i);
-            self.remove_user_from_cache(&record.score, &record.user_name)?;
+            self.remove_user_from_cache(&record.score, &record.user.name)?;
             true
         } else {
             // User not found
@@ -174,7 +167,7 @@ impl Scores {
         writeln!(result, "# UNRANKED CHALLENGE")?;
         writeln!(result, "{}\nRankings:", self.message)?;
         for (score, users) in self.cache()?.iter().rev() {
-            let user_names: Vec<String> = users.iter().map(|x| format!("`{x}`",)).collect();
+            let user_names: Vec<String> = users.iter().map(|x| format!("{x}",)).collect();
             writeln!(result, "{} WINS - {}", score, user_names.join(", "))?;
         }
         Ok(result)
@@ -182,9 +175,9 @@ impl Scores {
 }
 
 impl Idea {
-    fn new(user: &User, description: String) -> Idea {
+    fn new(creator: UserIdNumber, description: String) -> Idea {
         Self {
-            creator: user.id.into(),
+            creator,
             description,
             voters: Default::default(),
         }
@@ -207,8 +200,8 @@ impl Idea {
         &self.description
     }
 
-    fn change_vote(&mut self, user: &User, is_add_vote: bool) -> bool {
-        let user_number: UserIdNumber = user.id.into();
+    fn change_vote(&mut self, user_id_number: UserIdNumber, is_add_vote: bool) -> bool {
+        let user_number: UserIdNumber = user_id_number;
         let position = self.voters.iter().enumerate().find_map(|(i, voter)| {
             if &user_number == voter {
                 Some(i)
@@ -265,8 +258,8 @@ impl IdeaId {
 
 impl Ideas {
     const DISPLAY_HEADER: &'static str = "# Unranked Ideas";
-    fn add(&mut self, user: &User, description: String) {
-        let value = Idea::new(user, description);
+    fn add(&mut self, user_id_number: UserIdNumber, description: String) {
+        let value = Idea::new(user_id_number, description);
         self.data.push(value);
     }
 
@@ -277,25 +270,29 @@ impl Ideas {
         for (i, idea) in self.data.iter().enumerate() {
             writeln!(
                 result,
-                "{}. {idea} Suggested by: `{}`",
+                "{}. {idea} Suggested by: {}",
                 i + 1,
                 idea.creator.to_user(ctx).await?.name
             )?;
-            writeln!(result, "` {} `\n", idea.voters_as_string(ctx).await?)?;
+            writeln!(result, "{}\n", idea.voters_as_string(ctx).await?)?;
         }
         Ok(result)
     }
 
-    fn edit(&mut self, id: IdeaId, user: &User, new_description: String) -> anyhow::Result<()> {
+    fn edit(
+        &mut self,
+        id: IdeaId,
+        user_id_number: UserIdNumber,
+        new_description: String,
+    ) -> anyhow::Result<()> {
         let Some(idea) = self.data.get_mut(id.as_index()) else {
             return Err(self.err_invalid_id(id));
         };
 
         // Confirm this user created the Idea
-        if idea.creator != user.id.into() {
+        if idea.creator != user_id_number {
             warn!(
-                "Request to edit Idea# {id} by user {} but it was created by {}",
-                user.id,
+                "Request to edit Idea# {id} by user# {user_id_number} but it was created by {}",
                 idea.creator.to_user_id()
             );
             bail!("Failed to edit Idea# {id} because you didn't create it.")
@@ -310,16 +307,15 @@ impl Ideas {
     }
 
     /// Attempts to remove the Idea and return it
-    fn remove(&mut self, id: IdeaId, user: &User) -> anyhow::Result<Idea> {
+    fn remove(&mut self, id: IdeaId, user_id_number: UserIdNumber) -> anyhow::Result<Idea> {
         let Some(idea) = self.data.get(id.as_index()) else {
             return Err(self.err_invalid_id(id));
         };
 
         // Confirm this user created the Idea
-        if idea.creator != user.id.into() {
+        if idea.creator != user_id_number {
             warn!(
-                "Request to remove Idea# {id} by user {} but it was created by {}",
-                user.id,
+                "Request to remove Idea# {id} by user {user_id_number} but it was created by {}",
                 idea.creator.to_user_id()
             );
             bail!("Failed to remove Idea# {id} because you didn't create it.")
@@ -332,34 +328,37 @@ impl Ideas {
     }
 
     /// Returns true iff a change was made
-    fn change_vote(&mut self, id: IdeaId, user: &User, is_add_vote: bool) -> anyhow::Result<bool> {
+    fn change_vote(
+        &mut self,
+        id: IdeaId,
+        user_id_number: UserIdNumber,
+        is_add_vote: bool,
+    ) -> anyhow::Result<bool> {
         let Some(idea) = self.data.get_mut(id.as_index()) else {
             return Err(self.err_invalid_id(id));
         };
 
         // Action the vote
-        let result = idea.change_vote(user, is_add_vote);
+        let result = idea.change_vote(user_id_number, is_add_vote);
         info!(
-            "{} vote for user {:?} on Idea# {id} result in {}",
+            "{} vote for user# {user_id_number} on Idea# {id} result in {}",
             if is_add_vote { "Add" } else { "Remove" },
-            user.name,
             if result { "a change" } else { "no change" }
         );
         Ok(result)
     }
 
     /// Returns the number of votes changed
-    fn change_vote_all(&mut self, user: &User, is_add_vote: bool) -> usize {
+    fn change_vote_all(&mut self, user_id_number: UserIdNumber, is_add_vote: bool) -> usize {
         let mut result = 0;
         for idea in self.data.iter_mut() {
-            if idea.change_vote(user, is_add_vote) {
+            if idea.change_vote(user_id_number, is_add_vote) {
                 result += 1;
             };
         }
         info!(
-            "{} vote for user {:?} on all ideas result in {result} changes",
+            "{} vote for user# {user_id_number} on all ideas result in {result} changes",
             if is_add_vote { "Add" } else { "Remove" },
-            user.name,
         );
         result
     }

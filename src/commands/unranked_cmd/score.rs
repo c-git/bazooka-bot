@@ -2,7 +2,7 @@
 
 use crate::{
     commands::{tracing_handler_end, tracing_handler_start},
-    model::unranked::ScoreValue,
+    model::{unranked::ScoreValue, user_serde::UserRecordSupport as _},
     Context,
 };
 use std::fmt::Debug;
@@ -25,7 +25,9 @@ pub async fn score(ctx: Context<'_>, value: ScoreValue) -> anyhow::Result<()> {
 /// Remove your score
 pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    let did_remove = ctx.data().unranked_score_remove(ctx.author())?;
+    let did_remove = ctx
+        .data()
+        .unranked_score_remove(&ctx.author_to_user_record().await)?;
     display_scores_with_msg(
         &ctx,
         if did_remove {
@@ -55,7 +57,8 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 
 async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    ctx.data().unranked_score_set(ctx.author(), score)?;
+    ctx.data()
+        .unranked_score_set(ctx.author_to_user_record().await, score)?;
     display_scores_with_msg(&ctx, "Score Set").await?;
     tracing_handler_end()
 }

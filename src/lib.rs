@@ -29,3 +29,16 @@ impl<T: PartialEq> RemoveElement<T> for Vec<T> {
         }
     }
 }
+
+trait AuthorPreferredDisplay {
+    async fn author_preferred_display(&self) -> String;
+}
+
+impl AuthorPreferredDisplay for Context<'_> {
+    async fn author_preferred_display(&self) -> String {
+        match self.author_member().await {
+            Some(member) => member.display_name().to_string(),
+            None => self.author().name.clone(),
+        }
+    }
+}

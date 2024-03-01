@@ -24,7 +24,7 @@ pub async fn score(ctx: Context<'_>, value: ScoreValue) -> anyhow::Result<()> {
 #[instrument(name = "unranked-score-remove", skip(ctx))]
 /// Remove your score
 pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     let did_remove = ctx.data().unranked_score_remove(ctx.author())?;
     display_scores_with_msg(
         &ctx,
@@ -42,7 +42,7 @@ pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-score-leader_board", skip(ctx))]
 /// Show the current leader_board
 pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     display_scores(&ctx).await?;
     tracing_handler_end()
 }
@@ -54,7 +54,7 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 }
 
 async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     ctx.data().unranked_score_set(ctx.author(), score)?;
     display_scores_with_msg(&ctx, "Score Set").await?;
     tracing_handler_end()

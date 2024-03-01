@@ -1,8 +1,8 @@
 //! Groups all the bot commands together. These then delegate to the model as needed
 
-use tracing::info;
+use tracing::{error, info};
 
-use crate::{Context, Data};
+use crate::{AuthorPreferredDisplay as _, Context, Data};
 
 mod general;
 mod unranked_cmd;
@@ -13,8 +13,12 @@ pub use self::{
 };
 
 /// Common info added to tracing for functions
-fn tracing_handler_start(ctx: &Context) {
-    info!("Author: {}", ctx.author().name);
+async fn tracing_handler_start(ctx: &Context<'_>) {
+    info!("Author name: {}", ctx.author().name);
+    info!(
+        "Author Display Name: {}",
+        ctx.author_preferred_display().await
+    );
 }
 
 /// Used to mark the end
@@ -25,8 +29,11 @@ fn tracing_handler_end() -> anyhow::Result<()> {
 
 /// Standardized response to a call to a parent function (not callable by slash command)
 async fn call_to_parent_command(ctx: Context<'_>) -> anyhow::Result<()> {
-    info!("{} called a parent command", ctx.author().name);
-    ctx.say("requires subcommand see /help").await?;
+    error!(
+        "Got a call to a parent command. Function needs to be annotated with `subcommand_required`. Called by {}",
+        ctx.author().name
+    );
+    ctx.reply("requires subcommand see /help").await?;
     Ok(())
 }
 

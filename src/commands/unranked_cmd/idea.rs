@@ -35,7 +35,7 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-add", skip(ctx))]
 /// Adds a new idea
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     ctx.data().unranked_idea_add(ctx.author(), description)?;
     display_ideas_with_msg(&ctx, "Idea Added").await?;
     tracing_handler_end()
@@ -49,7 +49,7 @@ pub async fn edit(
     id: NonZeroUsize,
     #[rest] new_description: String,
 ) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     let id: IdeaId = id.into();
     ctx.data()
         .unranked_idea_edit(id, ctx.author(), new_description)?;
@@ -61,7 +61,7 @@ pub async fn edit(
 #[instrument(name = "unranked-idea-remove", skip(ctx))]
 /// Removes and idea you previously created
 pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     let id: IdeaId = id.into();
     let old_idea = ctx.data().unranked_idea_remove(id, ctx.author())?;
     display_ideas_with_msg(
@@ -79,7 +79,7 @@ pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-vote", skip(ctx))]
 /// Adds your vote for the given idea (If you are currently voting for it nothing happens)
 pub async fn vote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     change_vote(ctx, id.into(), true).await
 }
 
@@ -87,7 +87,7 @@ pub async fn vote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-unvote", skip(ctx))]
 /// Removes your vote for the given idea (If you are not currently voting for it nothing happens)
 pub async fn unvote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     change_vote(ctx, id.into(), false).await
 }
 
@@ -95,7 +95,7 @@ pub async fn unvote(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-vote_all", skip(ctx))]
 /// Adds your vote for all current ideas
 pub async fn vote_all(ctx: Context<'_>) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     change_vote_all(ctx, true).await
 }
 
@@ -103,7 +103,7 @@ pub async fn vote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
 /// Removes your vote for all ideas
 pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     change_vote_all(ctx, false).await
 }
 
@@ -111,7 +111,7 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
 /// Displays all ideas optionally verbosely
 pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     display_ideas(&ctx, is_verbose).await
 }
 

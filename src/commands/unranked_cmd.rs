@@ -34,6 +34,6 @@ pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "schedule_reset", skip(ctx))]
 pub async fn schedule_reset(ctx: Context<'_>) -> anyhow::Result<()> {
     // TODO 2: Require Auth
-    tracing_handler_start(&ctx);
+    tracing_handler_start(&ctx).await;
     todo!()
 }

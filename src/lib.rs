@@ -5,6 +5,11 @@
 mod commands;
 mod model;
 
+use std::str::FromStr;
+
+use anyhow::{bail, Context as _};
+use shuttle_secrets::SecretStore;
+
 pub use self::{commands::commands_list, model::Data};
 
 /// Type used by poise framework as the context when commands are triggered
@@ -40,5 +45,24 @@ impl AuthorPreferredDisplay for Context<'_> {
             Some(member) => member.display_name().to_string(),
             None => self.author().name.clone(),
         }
+    }
+}
+
+pub trait AccessSecrets {
+    fn access_secret_parse<F: FromStr>(&self, key: &str) -> anyhow::Result<F>;
+    fn access_secret_string(&self, key: &str) -> anyhow::Result<String>;
+}
+impl AccessSecrets for SecretStore {
+    fn access_secret_parse<F: FromStr>(&self, key: &str) -> anyhow::Result<F> {
+        let value = self.access_secret_string(key)?;
+        match value.parse() {
+            Ok(result) => Ok(result),
+            Err(_) => bail!("failed to parse {key}. Value: {value:?}"),
+        }
+    }
+
+    fn access_secret_string(&self, key: &str) -> anyhow::Result<String> {
+        self.get(key)
+            .with_context(|| format!("'{key}' was not found"))
     }
 }

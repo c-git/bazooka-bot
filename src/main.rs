@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, Data};
+use bazooka_bot::{commands_list, AccessSecrets as _, Data};
 use poise::serenity_prelude::GuildId;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_persist::PersistInstance;
@@ -16,19 +16,9 @@ async fn main(
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());
     // Get values from Secret Store
-    let discord_token = secret_store
-        .get("DISCORD_TOKEN")
-        .context("'DISCORD_TOKEN' was not found")?;
-    let guild_id: u64 = secret_store
-        .get("GUILD_ID")
-        .context("'GUILD_ID' was not found")?
-        .parse()
-        .context("failed to parse GUILD_ID")?;
-    let auth_role_id = secret_store
-        .get("AUTH_ROLE_ID")
-        .context("'AUTH_ROLE_ID' was not found")?
-        .parse()
-        .context("failed to parse AUTH_ROLE_ID")?;
+    let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
+    let guild_id: u64 = secret_store.access_secret_parse("GUILD_ID")?;
+    let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

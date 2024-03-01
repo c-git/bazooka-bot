@@ -57,7 +57,7 @@ impl AccessSecrets for SecretStore {
         let value = self.access_secret_string(key)?;
         match value.parse() {
             Ok(result) => Ok(result),
-            Err(_) => bail!("failed to parse {key}. Value: {value:?}"),
+            Err(_) => bail!("failed to parse {key}. Value: '{value}'"),
         }
     }
 

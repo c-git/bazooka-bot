@@ -58,6 +58,7 @@ async fn main(
                         ready.user.name
                     )
                 })?;
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 info!("{} is connected!", ready.user.name);
                 Ok(Data::new(persist, auth_role_id))
             })

@@ -8,7 +8,10 @@
 //! functions that need to take the lock on the mutex inside of modules called
 //! `protected_ops`` with the rule that they may not call any other functions in the same module
 
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::{
+    sync::{Arc, Mutex, MutexGuard},
+    time::Instant,
+};
 
 use anyhow::Context as _;
 use shuttle_persist::PersistInstance;
@@ -23,6 +26,7 @@ pub(crate) mod user_serde;
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
     internal: Arc<Mutex<InternalData>>,
+    start_instant: Instant,
     persist: PersistInstance,
 }
 
@@ -54,7 +58,11 @@ impl Data {
                 }
             },
         ));
-        Data { persist, internal }
+        Data {
+            persist,
+            internal,
+            start_instant: Instant::now(),
+        }
     }
 
     fn save(&self, value: &InternalData) -> anyhow::Result<()> {
@@ -64,5 +72,9 @@ impl Data {
             .context("failed to save data")?;
         info!("Data Saved");
         Ok(())
+    }
+
+    pub fn start_instant(&self) -> &Instant {
+        &self.start_instant
     }
 }

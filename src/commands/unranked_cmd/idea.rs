@@ -13,6 +13,7 @@ use crate::{
     prefix_command,
     slash_command,
     track_edits,
+    subcommand_required,
     subcommands(
         "add",
         "edit",

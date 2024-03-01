@@ -16,6 +16,7 @@ mod score;
     slash_command,
     track_edits,
     aliases("ur"),
+    subcommand_required,
     subcommands(
         "idea", 
         "score", 

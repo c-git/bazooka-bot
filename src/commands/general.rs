@@ -25,9 +25,15 @@ pub async fn ping(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_end()
 }
 
-/// Responds with how long the bot has been running for
-#[poise::command(hide_in_help, slash_command, prefix_command, track_edits)]
+#[poise::command(
+    hide_in_help,
+    slash_command,
+    prefix_command,
+    track_edits,
+    aliases("up")
+)]
 #[instrument(name = "uptime", skip(ctx))]
+/// Responds with how long the bot has been running for [aliases("up")]
 pub async fn uptime(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     ctx.say(

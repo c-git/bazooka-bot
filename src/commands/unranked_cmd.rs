@@ -25,7 +25,7 @@ mod score;
     )
 )]
 #[instrument(name = "unranked", skip(ctx))]
-/// Commands related to the Unranked Challenge
+/// Commands related to the Unranked Challenge [aliases("ur")]
 pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
     call_to_parent_command(ctx).await
 }

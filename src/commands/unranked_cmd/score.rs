@@ -43,7 +43,7 @@ pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
 
 #[poise::command(prefix_command, slash_command, aliases("disp"))]
 #[instrument(name = "unranked-score-leader_board", skip(ctx))]
-/// Show the current leader_board
+/// Show the current leader_board [aliases("disp")]
 pub async fn leader_board(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     display_scores(&ctx).await?;
@@ -57,9 +57,16 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     do_set_score(ctx, score).await
 }
 
-#[poise::command(prefix_command, slash_command, track_edits, check = "is_auth")]
+#[poise::command(
+    prefix_command,
+    slash_command,
+    track_edits,
+    aliases("msg"),
+    guild_only = true,
+    check = "is_auth"
+)]
 #[instrument(name = "unranked-score-message", skip(ctx))]
-/// Set message displayed with scores (Replaces current message)
+/// Set message displayed with scores (Replaces current message) [aliases("msg")]
 pub async fn message(ctx: Context<'_>, #[rest] msg: String) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     ctx.data()

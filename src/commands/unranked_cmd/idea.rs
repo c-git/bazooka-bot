@@ -1,6 +1,9 @@
 //! The commands related to the idea functionality for unranked
 
-use std::{fmt::Debug, num::NonZeroUsize};
+use std::{
+    fmt::{Debug, Display},
+    num::NonZeroUsize,
+};
 
 use tracing::{info, instrument};
 
@@ -130,13 +133,14 @@ pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Resul
 }
 
 #[instrument(skip(ctx))]
-pub async fn display_ideas_with_msg<S: Into<String> + Debug>(
+pub async fn display_ideas_with_msg<S: Display + Debug>(
     ctx: &Context<'_>,
     extra_msg: S,
 ) -> anyhow::Result<()> {
     info!("START");
-    display_ideas(ctx, false).await?;
-    ctx.reply(extra_msg).await?;
+    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, false).await?;
+    ctx.say(format!("- __{extra_msg}__\n{ideas_as_string}"))
+        .await?;
     tracing_handler_end()
 }
 

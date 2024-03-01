@@ -5,7 +5,7 @@ use crate::{
     model::{unranked::scores::ScoreValue, user_serde::UserRecordSupport as _},
     Context,
 };
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use tracing::{info, instrument};
 
 #[poise::command(
@@ -86,13 +86,14 @@ async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()>
 }
 
 #[instrument(skip(ctx))]
-async fn display_scores_with_msg<S: Into<String> + Debug>(
+async fn display_scores_with_msg<S: Display + Debug>(
     ctx: &Context<'_>,
-    msg: S,
+    extra_msg: S,
 ) -> anyhow::Result<()> {
     info!("START");
-    display_scores(ctx).await?;
-    ctx.say(msg).await?;
+    let scores_as_string = ctx.data().unranked.scores_as_string()?;
+    ctx.say(format!("- __{extra_msg}__\n{scores_as_string}"))
+        .await?;
     tracing_handler_end()
 }
 

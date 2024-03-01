@@ -1,10 +1,10 @@
 //! Groups the functionality related to unranked business logic
 
-use std::{fmt::Display, num::NonZeroUsize};
+use std::{collections::BTreeMap, fmt::Display, num::NonZeroUsize};
 
 use anyhow::{bail, Context as _};
 use poise::serenity_prelude::{CacheHttp, User};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::Context;
 
@@ -15,6 +15,7 @@ pub mod protected_ops;
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
 pub struct Unranked {
     ideas: Ideas,
+    scores: Scores,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
@@ -27,6 +28,160 @@ pub struct Idea {
     creator: UserIdNumber,
     description: String,
     voters: Vec<UserIdNumber>,
+}
+
+pub type ScoreValue = i8;
+type ScoresCache = BTreeMap<ScoreValue, Vec<User>>;
+
+/// Users scores
+///
+/// Assumes that each user has at most one record
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+pub struct Scores {
+    pub message: String,
+    records: Vec<ScoreRecord>,
+    #[serde(skip)]
+    cache: Option<ScoresCache>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+pub struct ScoreRecord {
+    user_id_number: UserIdNumber,
+    score: ScoreValue,
+}
+
+impl Scores {
+    pub async fn set_score(
+        &mut self,
+        ctx: &Context<'_>,
+        user: User,
+        score: ScoreValue,
+    ) -> anyhow::Result<()> {
+        // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
+        self.cache(ctx).await?;
+
+        // Check if user already exists in the records and update
+        // Assumes that the user exits at most once and this is ensured by this being the only way to add a user
+        // If invalid data is loaded that breaks this invariant then the output can be unexpected
+        let user_id_number: UserIdNumber = user.id.into();
+        for record in self.records.iter_mut() {
+            if record.user_id_number == user_id_number {
+                // User found. Update score if different and update cache
+                if record.score != score {
+                    let old_score = record.score;
+
+                    // Update user record
+                    record.score = score;
+
+                    self.remove_user_from_cache(ctx, &old_score, &user).await?;
+
+                    // Add user to new list in cache
+                    self.cache(ctx).await?.entry(score).or_default().push(user);
+                }
+                return Ok(());
+            }
+        }
+
+        // New user, not found. Create record and update cache
+        self.records.push(ScoreRecord {
+            user_id_number,
+            score,
+        });
+        self.cache(ctx).await?.entry(score).or_default().push(user);
+        Ok(())
+    }
+
+    /// Removes a user from the cache which means this function depends on the cache existing
+    ///
+    /// Should be called after the source data is updated in case of errors that busting the cache will lead to the data being updated
+    async fn remove_user_from_cache(
+        &mut self,
+        ctx: &Context<'_>,
+        score_in_cache: &ScoreValue,
+        user: &User,
+    ) -> Result<(), anyhow::Error> {
+        if self.cache.is_none() {
+            error!("Attempt to remove from the cache while it does not exist");
+            bail!("Internal Error. Please try again.");
+        }
+        match self.cache(ctx).await?.get_mut(score_in_cache) {
+            Some(users) => {
+                // Remove user from their current location
+                users.remove_element(user);
+                if users.is_empty() {
+                    self.cache(ctx).await?.remove(score_in_cache);
+                }
+            }
+            None => {
+                self.cache = None; // Remove corrupted cache
+                error!(
+                    "Internal error. Cache seems to be out of sync with the data. Cache busted."
+                );
+                bail!("Internal error. Please try again.");
+            }
+        };
+        Ok(())
+    }
+
+    /// Returns a reference to the cache, filling it if it doesn't exist
+    async fn cache(&mut self, ctx: &Context<'_>) -> anyhow::Result<&mut ScoresCache> {
+        if self.cache.is_none() {
+            info!(
+                "Scores cache is empty going to fill. {} records found",
+                self.records.len()
+            );
+            let mut map: BTreeMap<i8, Vec<User>> = BTreeMap::new();
+            for record in self.records.iter() {
+                map.entry(record.score)
+                    .or_default()
+                    .push(record.user_id_number.to_user(ctx).await?);
+            }
+            self.cache = Some(map);
+        }
+        Ok(self
+            .cache
+            .as_mut()
+            .expect("value should have just been set if it didn't exist"))
+    }
+
+    /// Removes the score if it exists and returns true iff the score was removed
+    pub async fn remove_score(&mut self, ctx: &Context<'_>, user: User) -> anyhow::Result<bool> {
+        // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
+        self.cache(ctx).await?;
+        let user_id_number = user.id.into();
+        let index = self.records.iter().enumerate().find_map(|(i, x)| {
+            if x.user_id_number == user_id_number {
+                Some(i)
+            } else {
+                None
+            }
+        });
+
+        Ok(if let Some(i) = index {
+            let record = self.records.remove(i);
+            self.remove_user_from_cache(ctx, &record.score, &user)
+                .await?;
+            true
+        } else {
+            // User not found
+            false
+        })
+    }
+
+    /// Returns a string representation of the scores
+    ///
+    /// Wasn't able to use Display trait because we need mutable access
+    pub async fn display(&mut self, ctx: &Context<'_>) -> anyhow::Result<String> {
+        use std::fmt::Write as _;
+        let mut result = String::new();
+        writeln!(result, "# UNRANKED CHALLENGE")?;
+        writeln!(result, "{}\nRankings:", self.message)?;
+        for (score, users) in self.cache(ctx).await?.iter().rev() {
+            let user_names: Vec<String> = users.iter().map(|x| format!("`{}`", x.name)).collect();
+            writeln!(result, "{} WINS - {}", score, user_names.join(", "))?;
+        }
+        Ok(result)
+    }
 }
 
 impl Idea {
@@ -233,5 +388,25 @@ impl From<NonZeroUsize> for IdeaId {
 impl Display for IdeaId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+trait RemoveElement<T: PartialEq> {
+    /// Returns true iff the element was found and removed
+    fn remove_element(&mut self, element: &T) -> bool;
+}
+
+impl<T: PartialEq> RemoveElement<T> for Vec<T> {
+    fn remove_element(&mut self, element: &T) -> bool {
+        let index = self
+            .iter()
+            .enumerate()
+            .find_map(|(i, x)| if x == element { Some(i) } else { None });
+        if let Some(i) = index {
+            self.remove(i);
+            true
+        } else {
+            false
+        }
     }
 }

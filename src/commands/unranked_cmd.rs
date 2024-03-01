@@ -18,8 +18,8 @@ mod score;
     aliases("ur"),
     subcommands(
         "idea", 
+        "score", 
         // TODO 2: Enable functions
-        // "score", 
         // "schedule_reset"
     )
 )]

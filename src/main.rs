@@ -17,7 +17,7 @@ async fn main(
     info!("Bot version is {}", version::version!());
     // Get values from Secret Store
     let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
-    let guild_id: u64 = secret_store.access_secret_parse("GUILD_ID")?;
+    let guild_id: GuildId = secret_store.access_secret_parse("GUILD_ID")?;
     let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
 
     let framework = poise::Framework::builder()
@@ -36,18 +36,14 @@ async fn main(
         .setup(move |ctx, ready, framework| {
             Box::pin(async move {
                 info!("Going to register guild: {guild_id}");
-                poise::builtins::register_in_guild(
-                    ctx,
-                    &framework.options().commands,
-                    GuildId::new(guild_id),
-                )
-                .await
-                .with_context(|| {
-                    format!(
-                        "failed to register {:?} in guild: {guild_id}",
-                        ready.user.name
-                    )
-                })?;
+                poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id)
+                    .await
+                    .with_context(|| {
+                        format!(
+                            "failed to register {:?} in guild: {guild_id}",
+                            ready.user.name
+                        )
+                    })?;
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 info!("{} is connected!", ready.user.name);
                 Ok(Data::new(persist, auth_role_id))

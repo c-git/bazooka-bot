@@ -17,3 +17,6 @@ shuttle-serenity = "0.39.0"
 tokio = "1.26.0"
 tracing = "0.1.37"
 version = "3.0.0"
+
+[dev-dependencies]
+rstest = "0.18.2"

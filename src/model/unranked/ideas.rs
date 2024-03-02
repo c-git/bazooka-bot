@@ -283,3 +283,110 @@ impl Display for IdeaId {
 }
 
 impl Resettable for Ideas {}
+
+#[cfg(test)]
+mod tests {
+    use poise::serenity_prelude::UserId;
+    use rstest::rstest;
+
+    use super::*;
+
+    impl UserIdNumber {
+        fn new(value: u64) -> Self {
+            UserId::new(value).into()
+        }
+    }
+
+    impl From<(&str, Vec<u64>)> for Idea {
+        fn from(value: (&str, Vec<u64>)) -> Self {
+            Self {
+                creator: UserIdNumber::new(1),
+                description: value.0.to_string(),
+                voters: value.1.into_iter().map(|x| UserId::new(x).into()).collect(),
+            }
+        }
+    }
+
+    impl From<Vec<Idea>> for Ideas {
+        fn from(data: Vec<Idea>) -> Self {
+            Self { data }
+        }
+    }
+
+    impl From<Vec<(&str, Vec<u64>)>> for Ideas {
+        fn from(value: Vec<(&str, Vec<u64>)>) -> Self {
+            value
+                .into_iter()
+                .map(Into::into)
+                .collect::<Vec<Idea>>()
+                .into()
+        }
+    }
+
+    #[test]
+    fn empty_ideas() {
+        let ideas: Ideas = Default::default();
+        for i in 0..10 {
+            assert!(ideas.leading().is_none());
+            assert!(ideas.above_threshold(i).is_empty());
+        }
+    }
+
+    #[rstest]
+    #[case::single_point_over(vec![
+            ("only", vec![1,2,3,4])
+        ].into(),
+        3, Some("only"), vec!["only"])]
+    #[case::single_point_under(vec![
+            ("only", vec![1,2,3,4])
+        ].into(),
+        4, Some("only"), vec![])]
+    #[case::only_one_over(vec![
+            ("first", vec![1,2,3,4]),("second", vec![1,2,3])
+        ].into(), 
+        3, Some("first"), vec!["first"])]
+    #[case::pair_equal(vec![
+            ("first", vec![1,2,3,4]),
+            ("second", vec![1,2,3,4])
+        ].into(), 
+        3, Some("first"), vec!["first", "second"])]
+    #[case::multiple_equal_(vec![
+            ("1st", vec![1,2,3,4]),
+            ("2nd", vec![1,2,3,4]),
+            ("3rd", vec![1,2,3,4]),
+            ("4th", vec![1,2,3,4,5]),
+            ("5th", vec![1,2,3,4,5]),
+            ("6th", vec![1,2,3,4,5]),
+            ("7th", vec![1,2,3]),
+            ("8th", vec![]),
+            ("9th", vec![1,2,3,4]),
+        ].into(), 
+        3, Some("4th"), vec!["4th", "5th", "6th","1st","2nd","3rd","9th"])]
+    fn test_name(
+        #[case] ideas: Ideas,
+        #[case] threshold: usize,
+        #[case] expected_leading_desc: Option<&str>,
+        #[case] expected_above_ideas_desc: Vec<&str>,
+    ) {
+        let actual_leading_desc = ideas.leading().map(|idea| &idea.description[..]);
+
+        let actual_above_ideas_desc: Vec<&str> = ideas
+            .above_threshold(threshold)
+            .iter()
+            .map(|x| &x.description[..])
+            .collect();
+
+        assert_eq!(actual_leading_desc, expected_leading_desc, "check leading");
+        assert_eq!(
+            actual_above_ideas_desc, expected_above_ideas_desc,
+            "check above threshold"
+        );
+        if !actual_above_ideas_desc.is_empty() {
+            assert_eq!(
+                actual_above_ideas_desc.first().copied(),
+                actual_leading_desc,
+                "if there is a first it must match leading"
+            );
+        }
+    }
+}

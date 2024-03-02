@@ -44,3 +44,4 @@ It will be scheduled manually each season by an officer.
 - [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
 - [ ] Restrict unranked to that channel
 - [ ] Send a status messages when it connects (including the version)
+- [ ] Change results (vote counts and leader board) to (embeds)[https://docs.rs/poise/latest/poise/serenity_prelude/struct.CreateMessage.html#examples]

@@ -6,10 +6,10 @@ use tracing::{info, warn};
 
 use crate::{
     model::{user_serde::UserIdNumber, PersistData as _, SharedConfig},
-    Context,
+    Context, Resettable,
 };
 
-pub mod protected_ops;
+pub(crate) mod protected_ops;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
 pub struct Ideas {
@@ -246,3 +246,5 @@ impl Display for IdeaId {
         write!(f, "{}", self.0)
     }
 }
+
+impl Resettable for Ideas {}

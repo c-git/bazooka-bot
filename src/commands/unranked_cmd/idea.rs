@@ -6,7 +6,9 @@ use poise::{serenity_prelude::CreateEmbed, CreateReply};
 use tracing::{info, instrument};
 
 use crate::{
-    commands::{call_to_parent_command, tracing_handler_end, tracing_handler_start, Context},
+    commands::{
+        call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start, Context,
+    },
     model::{
         unranked::ideas::{IdeaId, Ideas},
         user_serde::UserRecordSupport as _,
@@ -26,7 +28,8 @@ use crate::{
         "unvote",
         "vote_all",
         "unvote_all",
-        "display"
+        "display",
+        "reset",
     )
 )]
 #[instrument(name = "idea", skip(ctx))]
@@ -123,6 +126,25 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     display_ideas(&ctx, is_verbose).await
+}
+
+#[poise::command(prefix_command, guild_only = true, check = "is_auth")]
+#[instrument(name = "unranked-idea-reset", skip(ctx))]
+/// Sets ideas back to the default
+pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
+    tracing_handler_start(&ctx).await;
+    do_ideas_reset(&ctx).await?;
+    tracing_handler_end()
+}
+
+#[instrument(skip(ctx))]
+pub async fn do_ideas_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
+    info!("START");
+    ctx.say("Ideas before reset").await?;
+    display_ideas(ctx, true).await?;
+    ctx.data().unranked.ideas_reset()?;
+    display_ideas_with_msg(ctx, "Ideas reset").await?;
+    tracing_handler_end()
 }
 
 #[instrument(skip(ctx))]

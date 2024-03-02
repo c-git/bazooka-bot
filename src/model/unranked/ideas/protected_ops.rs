@@ -5,7 +5,7 @@ use std::sync::MutexGuard;
 
 use crate::{
     model::{unranked::Unranked, user_serde::UserIdNumber},
-    Context,
+    Context, Resettable as _,
 };
 
 use super::{Idea, IdeaId, Ideas};
@@ -94,5 +94,12 @@ impl Unranked {
         } else {
             Ok(self.guard_idea()?.to_string())
         }
+    }
+
+    pub(crate) fn ideas_reset(&self) -> anyhow::Result<()> {
+        let mut guard = self.guard_idea()?;
+        guard.reset();
+        self.save_idea(&guard)?;
+        Ok(())
     }
 }

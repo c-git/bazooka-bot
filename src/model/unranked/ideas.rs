@@ -12,11 +12,12 @@ use crate::{
 pub(crate) mod protected_ops;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+/// If there are any Ideas above a threshold passed then it is guaranteed that the first one returned will also match the output of leading
 pub struct Ideas {
     data: Vec<Idea>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, PartialEq, Eq)]
 pub struct Idea {
     creator: UserIdNumber,
     description: String,
@@ -232,6 +233,40 @@ impl Ideas {
 
     pub(crate) fn new(shared_config: &SharedConfig) -> Self {
         shared_config.persist.data_load_or_default(Self::DATA_KEY)
+    }
+
+    /// Returns the idea if any exist that has the most votes and appears earliest
+    pub fn leading(&self) -> Option<&Idea> {
+        let mut result = self.data.first()?;
+        for idea in self.data.iter().skip(1) {
+            if result.voters.len() < idea.voters.len() {
+                result = idea;
+            }
+        }
+        Some(result)
+    }
+
+    /// Returns the list of ideas above the threshold sorted by number of votes then by insertion order
+    pub fn above_threshold(&self, threshold: usize) -> Vec<&Idea> {
+        let mut result: Vec<&Idea> = self
+            .data
+            .iter()
+            .filter(|idea| idea.voters.len() > threshold)
+            .collect();
+        result.sort_by_key(|&idea| -(idea.voters.len() as i32)); // Rev wouldn't work because we need to keep them in inserted order
+        debug_assert!(
+            (|| {
+                if result.is_empty() {
+                    return true;
+                }
+                let leading = self.leading().expect(
+                    "if result is not empty then at least one value exists so the should be a leading",
+                );
+                result.first().unwrap() == &leading
+            })(),
+            "leading and first returned value should be the same if returned list is not empty"
+        );
+        result
     }
 }
 

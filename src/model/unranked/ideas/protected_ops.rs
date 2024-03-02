@@ -102,4 +102,25 @@ impl Unranked {
         self.save_idea(&guard)?;
         Ok(())
     }
+
+    /// Returns the description of the Idea that is leading if there is one
+    pub(crate) fn ideas_leading(&self) -> anyhow::Result<Option<String>> {
+        let guard = self.guard_idea()?;
+        if let Some(idea) = guard.leading() {
+            Ok(Some(idea.description.clone()))
+        } else {
+            Ok(None)
+        }
+    }
+
+    // Returns the descriptions of the ideas that are above the threshold (The first is the one leading if over the threshold)
+    pub(crate) fn ideas_above_threshold(&self, threshold: usize) -> anyhow::Result<Vec<String>> {
+        let guard = self.guard_idea()?;
+        let idea = guard
+            .above_threshold(threshold)
+            .iter()
+            .map(|idea| idea.description.clone())
+            .collect();
+        Ok(idea)
+    }
 }

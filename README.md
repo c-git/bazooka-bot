@@ -27,8 +27,8 @@ Note: Some checked off items my not be complete only started but at the time of 
   - [ ] `other_set(user, score)` (Auth Req)
   - [ ] `other_remove(user)` (Auth Req)
   - [x] `set_message(message)` (Auth Req)
-- [ ] `event_start` (See [event start](#event-start) for details) (Auth Req)
-- [x] `/unranked schedule_event_start(date_time)` (Auth Req)
+- [x] `start_event` (See [event start](#event-start) for details) (Auth Req)
+- [x] `/unranked schedule_start_event(date_time)` (Auth Req)
 
 ## Event Start
 

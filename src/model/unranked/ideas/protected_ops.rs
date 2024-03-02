@@ -113,7 +113,7 @@ impl Unranked {
         }
     }
 
-    // Returns the descriptions of the ideas that are above the threshold (The first is the one leading if over the threshold)
+    /// Returns the descriptions of the ideas that are above the threshold (The first is the one leading if over the threshold)
     pub(crate) fn ideas_above_threshold(&self, threshold: usize) -> anyhow::Result<Vec<String>> {
         let guard = self.guard_idea()?;
         let idea = guard

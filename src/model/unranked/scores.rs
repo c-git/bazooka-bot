@@ -34,6 +34,7 @@ pub struct ScoreRecord {
 }
 
 impl Scores {
+    pub const DISPLAY_TITLE: &'static str = "UNRANKED CHALLENGE";
     const DATA_KEY: &'static str = "scores";
     pub fn set_score(&mut self, user: UserRecord, score: ScoreValue) -> anyhow::Result<()> {
         // Generate cache if it doesn't exist so that the code later can assume it already exists for the current data
@@ -148,7 +149,6 @@ impl Scores {
     pub fn display(&mut self) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
-        writeln!(result, "# UNRANKED CHALLENGE")?;
         writeln!(result, "{}\n\nRankings:", self.message)?;
         for (score, users) in self.cache()?.iter().rev() {
             let user_names: Vec<String> = users.iter().map(|x| format!("{x}",)).collect();

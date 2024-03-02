@@ -2,10 +2,14 @@
 
 use crate::{
     commands::{is_auth, tracing_handler_end, tracing_handler_start},
-    model::{unranked::scores::ScoreValue, user_serde::UserRecordSupport as _},
+    model::{
+        unranked::scores::{ScoreValue, Scores},
+        user_serde::UserRecordSupport as _,
+    },
     Context,
 };
-use std::fmt::{Debug, Display};
+use poise::{serenity_prelude::CreateEmbed, CreateReply};
+use std::fmt::Debug;
 use tracing::{info, instrument};
 
 #[poise::command(
@@ -86,18 +90,35 @@ async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()>
 }
 
 #[instrument(skip(ctx))]
-async fn display_scores_with_msg<S: Display + Debug>(
+async fn do_display_scores<S: Into<String> + Debug>(
     ctx: &Context<'_>,
-    extra_msg: S,
+    extra_msg: Option<S>,
 ) -> anyhow::Result<()> {
     info!("START");
-    let scores_as_string = ctx.data().unranked.scores_as_string()?;
-    ctx.say(format!("- __{extra_msg}__\n{scores_as_string}"))
-        .await?;
+    let mut builder = display_generate(ctx)?;
+    if let Some(msg) = extra_msg {
+        builder = builder.content(msg);
+    }
+    ctx.send(builder).await?;
     tracing_handler_end()
 }
 
+#[instrument(skip(ctx))]
+async fn display_scores_with_msg<S: Into<String> + Debug>(
+    ctx: &Context<'_>,
+    extra_msg: S,
+) -> anyhow::Result<()> {
+    do_display_scores(ctx, Some(extra_msg)).await
+}
+
 async fn display_scores(ctx: &Context<'_>) -> anyhow::Result<()> {
-    ctx.say(ctx.data().unranked.scores_as_string()?).await?;
-    Ok(())
+    do_display_scores::<&str>(ctx, None).await
+}
+
+fn display_generate(ctx: &Context<'_>) -> anyhow::Result<CreateReply> {
+    let scores_as_string = ctx.data().unranked.scores_as_string()?;
+    let embed = CreateEmbed::new()
+        .title(Scores::DISPLAY_TITLE)
+        .description(scores_as_string);
+    Ok(CreateReply::default().embed(embed))
 }

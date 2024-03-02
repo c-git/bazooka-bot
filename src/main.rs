@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, AccessSecrets as _, Data};
+use bazooka_bot::{commands_list, AccessSecrets as _, Data, SharedConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use poise::serenity_prelude::{GuildId, UserId};
 use shuttle_persist::PersistInstance;
@@ -16,11 +16,11 @@ async fn main(
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());
-    // Get values from Secret Store
+    // Load setup values
     let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
     let guild_id: GuildId = secret_store.access_secret_parse("GUILD_ID")?;
-    let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
-    let is_production = std::env::var("SHUTTLE").is_ok();
+    let shared_config =
+        SharedConfig::try_new(&secret_store, persist).context("failed to created shared_config")?;
     let owners: HashSet<UserId> = secret_store
         .access_secret_string("OWNERS")?
         .split(',')
@@ -30,6 +30,7 @@ async fn main(
                 .map(UserId::new)
         })
         .collect::<anyhow::Result<HashSet<UserId>>>()?;
+    let is_production = std::env::var("SHUTTLE").is_ok();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -68,7 +69,7 @@ async fn main(
                     })?;
                 }
                 info!("{} is connected!", ready.user.name);
-                Ok(Data::new(persist, auth_role_id))
+                Ok(Data::new(shared_config))
             })
         })
         .build();

@@ -13,7 +13,10 @@ use std::time::Instant;
 use anyhow::Context as _;
 use poise::serenity_prelude::RoleId;
 use shuttle_persist::PersistInstance;
+use shuttle_secrets::SecretStore;
 use tracing::{error, info};
+
+use crate::AccessSecrets as _;
 
 use self::unranked::Unranked;
 
@@ -35,23 +38,22 @@ pub struct SharedConfig {
 }
 
 impl SharedConfig {
-    fn new(
-        start_instant: Instant,
-        auth_role_id: RoleId,
+    pub fn try_new(
+        secret_store: &SecretStore,
         persist: PersistInstance,
-    ) -> &'static Self {
+    ) -> anyhow::Result<&'static Self> {
+        let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
         let result = Box::new(Self {
-            start_instant,
+            start_instant: Instant::now(),
             auth_role_id,
             persist,
         });
-        Box::leak(result)
+        Ok(Box::leak(result))
     }
 }
 
 impl Data {
-    pub fn new(persist: PersistInstance, auth_role_id: RoleId) -> Self {
-        let shared_config = SharedConfig::new(Instant::now(), auth_role_id, persist);
+    pub fn new(shared_config: &'static SharedConfig) -> Self {
         Data {
             unranked: Unranked::new(shared_config),
             shared_config,

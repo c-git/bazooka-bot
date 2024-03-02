@@ -104,7 +104,7 @@ pub async fn do_scores_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
     info!("START");
     display_scores_with_msg(ctx, "Scores before reset").await?;
     ctx.data().unranked.scores_reset()?;
-    display_scores_with_msg(ctx, "Scores reset").await?;
+    display_scores_with_msg(ctx, "---\nScores reset").await?;
     tracing_handler_end()
 }
 

@@ -143,7 +143,7 @@ pub async fn do_ideas_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
     ctx.say("Ideas before reset").await?;
     display_ideas(ctx, true).await?;
     ctx.data().unranked.ideas_reset()?;
-    display_ideas_with_msg(ctx, "Ideas reset").await?;
+    display_ideas_with_msg(ctx, "---\nIdeas reset").await?;
     tracing_handler_end()
 }
 

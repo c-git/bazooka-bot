@@ -1,15 +1,16 @@
 //! The commands related to the idea functionality for unranked
 
-use std::{
-    fmt::{Debug, Display},
-    num::NonZeroUsize,
-};
+use std::{fmt::Debug, num::NonZeroUsize};
 
+use poise::{serenity_prelude::CreateEmbed, CreateReply};
 use tracing::{info, instrument};
 
 use crate::{
     commands::{call_to_parent_command, tracing_handler_end, tracing_handler_start, Context},
-    model::{unranked::ideas::IdeaId, user_serde::UserRecordSupport as _},
+    model::{
+        unranked::ideas::{IdeaId, Ideas},
+        user_serde::UserRecordSupport as _,
+    },
 };
 
 #[poise::command(
@@ -42,7 +43,7 @@ pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Resul
     ctx.data()
         .unranked
         .idea_add(ctx.author_id_number(), description)?;
-    display_ideas_with_msg(&ctx, "Idea Added").await?;
+    display_ideas_with_msg(&ctx, "Idea added").await?;
     tracing_handler_end()
 }
 
@@ -76,7 +77,7 @@ pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     display_ideas_with_msg(
         &ctx,
         format!(
-            "Idea Removed. It was ID {id} with description: {:?}",
+            "Idea removed. It was: # {id} - {:?}",
             old_idea.description()
         ),
     )
@@ -127,21 +128,28 @@ pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Resu
 #[instrument(skip(ctx))]
 pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<()> {
     info!("START");
-    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, is_verbose).await?;
-    ctx.say(ideas_as_string).await?;
+    let builder = display_generate(ctx, is_verbose).await?;
+    ctx.send(builder).await?;
     tracing_handler_end()
 }
 
 #[instrument(skip(ctx))]
-pub async fn display_ideas_with_msg<S: Display + Debug>(
+pub async fn display_ideas_with_msg<S: Into<String> + Debug>(
     ctx: &Context<'_>,
     extra_msg: S,
 ) -> anyhow::Result<()> {
     info!("START");
-    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, false).await?;
-    ctx.say(format!("- __{extra_msg}__\n{ideas_as_string}"))
-        .await?;
+    let builder = display_generate(ctx, false).await?.content(extra_msg);
+    ctx.send(builder).await?;
     tracing_handler_end()
+}
+
+async fn display_generate(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<CreateReply> {
+    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, is_verbose).await?;
+    let embed = CreateEmbed::new()
+        .title(Ideas::DISPLAY_TITLE)
+        .description(ideas_as_string);
+    Ok(CreateReply::default().embed(embed))
 }
 
 #[instrument(skip(ctx))]

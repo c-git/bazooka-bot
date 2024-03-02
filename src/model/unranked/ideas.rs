@@ -39,7 +39,10 @@ impl Idea {
         }
     }
 
-    async fn voters_as_string(&self, cache_http: impl CacheHttp) -> anyhow::Result<String> {
+    async fn voters_as_string(&self, cache_http: impl CacheHttp) -> anyhow::Result<Option<String>> {
+        if self.voters.is_empty() {
+            return Ok(None);
+        }
         let mut users_names = Vec::with_capacity(self.voters.len());
         for id in self.voters.iter() {
             users_names.push(
@@ -49,7 +52,8 @@ impl Idea {
                     .name,
             );
         }
-        Ok(users_names.join(", "))
+
+        Ok(Some(format!("`{}`", users_names.join(", "))))
     }
 
     pub fn description(&self) -> &str {
@@ -91,7 +95,6 @@ impl Display for Idea {
 }
 impl Display for Ideas {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", Self::DISPLAY_HEADER)?;
         for (i, idea) in self.data.iter().enumerate() {
             writeln!(f, "{}. {idea}", i + 1)?
         }
@@ -108,7 +111,7 @@ impl IdeaId {
 
 impl Ideas {
     const DATA_KEY: &'static str = "ideas";
-    const DISPLAY_HEADER: &'static str = "# Unranked Ideas";
+    pub const DISPLAY_TITLE: &'static str = "# Unranked Ideas";
     pub fn add(&mut self, user_id_number: UserIdNumber, description: String) {
         let value = Idea::new(user_id_number, description);
         self.data.push(value);
@@ -117,15 +120,17 @@ impl Ideas {
     pub async fn verbose_display(&self, ctx: &Context<'_>) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
-        writeln!(result, "{}\n", Self::DISPLAY_HEADER)?;
         for (i, idea) in self.data.iter().enumerate() {
             writeln!(
                 result,
-                "{}. {idea} Suggested by: {}",
+                "{}. {idea} Suggested by: `{}`",
                 i + 1,
                 idea.creator.to_user(ctx).await?.name
             )?;
-            writeln!(result, "{}\n", idea.voters_as_string(ctx).await?)?;
+            if let Some(voters) = idea.voters_as_string(ctx).await? {
+                writeln!(result, "{voters}")?;
+            }
+            writeln!(result)?; // Add separating line
         }
         Ok(result)
     }

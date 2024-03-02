@@ -55,4 +55,11 @@ impl Unranked {
         self.save_scores(&guard)?;
         Ok(())
     }
+
+    pub(crate) fn score_reset(&self) -> anyhow::Result<()> {
+        let mut guard = self.guard_scores()?;
+        guard.reset();
+        self.save_scores(&guard)?;
+        Ok(())
+    }
 }

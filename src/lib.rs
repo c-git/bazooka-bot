@@ -69,3 +69,9 @@ impl AccessSecrets for SecretStore {
             .with_context(|| format!("'{key}' was not found"))
     }
 }
+
+trait Resettable: Default {
+    fn reset(&mut self) {
+        *self = Default::default();
+    }
+}

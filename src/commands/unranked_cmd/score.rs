@@ -77,7 +77,7 @@ pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::R
     let msg = msg.unwrap_or_default();
     ctx.data()
         .unranked
-        .score_message(ctx.author_id_number(), msg)?;
+        .scores_message(ctx.author_id_number(), msg)?;
     display_scores_with_msg(
         &ctx,
         if is_cleared {
@@ -103,7 +103,7 @@ pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn do_scores_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
     info!("START");
     display_scores_with_msg(ctx, "Scores before reset").await?;
-    ctx.data().unranked.score_reset()?;
+    ctx.data().unranked.scores_reset()?;
     display_scores_with_msg(ctx, "Scores reset").await?;
     tracing_handler_end()
 }

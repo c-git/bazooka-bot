@@ -3,9 +3,12 @@
 
 use std::sync::MutexGuard;
 
-use crate::model::{
-    unranked::Unranked,
-    user_serde::{UserIdNumber, UserRecord},
+use crate::{
+    model::{
+        unranked::Unranked,
+        user_serde::{UserIdNumber, UserRecord},
+    },
+    Resettable as _,
 };
 
 use super::{ScoreValue, Scores};
@@ -45,7 +48,7 @@ impl Unranked {
         Ok(result)
     }
 
-    pub(crate) fn score_message(
+    pub(crate) fn scores_message(
         &self,
         user_id_number: UserIdNumber,
         msg: String,
@@ -56,7 +59,7 @@ impl Unranked {
         Ok(())
     }
 
-    pub(crate) fn score_reset(&self) -> anyhow::Result<()> {
+    pub(crate) fn scores_reset(&self) -> anyhow::Result<()> {
         let mut guard = self.guard_scores()?;
         guard.reset();
         self.save_scores(&guard)?;

@@ -235,12 +235,12 @@ impl Ideas {
         shared_config.persist.data_load_or_default(Self::DATA_KEY)
     }
 
-    /// Returns the idea if any exist that has the most votes and appears earliest
-    pub fn leading(&self) -> Option<&Idea> {
-        let mut result = self.data.first()?;
-        for idea in self.data.iter().skip(1) {
-            if result.voters.len() < idea.voters.len() {
-                result = idea;
+    /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest
+    pub fn leading(&self) -> Option<(usize,&Idea)> {
+        let mut result = (0, self.data.first()?);
+        for x in self.data.iter().enumerate().skip(1) {
+            if result.1.voters.len() < x.1.voters.len() {
+                result = x;
             }
         }
         Some(result)
@@ -262,7 +262,7 @@ impl Ideas {
                 let leading = self.leading().expect(
                     "if result is not empty then at least one value exists so the should be a leading",
                 );
-                result.first().unwrap() == &leading
+                result.first().unwrap() == &leading.1
             })(),
             "leading and first returned value should be the same if returned list is not empty"
         );
@@ -368,7 +368,7 @@ mod tests {
         #[case] expected_leading_desc: Option<&str>,
         #[case] expected_above_ideas_desc: Vec<&str>,
     ) {
-        let actual_leading_desc = ideas.leading().map(|idea| &idea.description[..]);
+        let actual_leading_desc = ideas.leading().map(|idea| &idea.1.description[..]);
 
         let actual_above_ideas_desc: Vec<&str> = ideas
             .above_threshold(threshold)

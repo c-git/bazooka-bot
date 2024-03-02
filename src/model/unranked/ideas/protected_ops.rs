@@ -107,7 +107,7 @@ impl Unranked {
     pub(crate) fn ideas_leading(&self) -> anyhow::Result<Option<String>> {
         let guard = self.guard_idea()?;
         if let Some(idea) = guard.leading() {
-            Ok(Some(idea.description.clone()))
+            Ok(Some(idea.1.description.clone()))
         } else {
             Ok(None)
         }

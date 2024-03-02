@@ -90,7 +90,7 @@ pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::R
     tracing_handler_end()
 }
 
-#[poise::command(hide_in_help, prefix_command, owners_only = true)]
+#[poise::command(prefix_command, guild_only = true, check = "is_auth")]
 #[instrument(name = "unranked-score-reset", skip(ctx))]
 /// Sets scores back to the default
 pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
@@ -104,7 +104,7 @@ pub async fn do_scores_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
     info!("START");
     display_scores_with_msg(ctx, "Scores before reset").await?;
     ctx.data().unranked.score_reset()?;
-    display_scores_with_msg(ctx, "Scores Reset").await?;
+    display_scores_with_msg(ctx, "Scores reset").await?;
     tracing_handler_end()
 }
 

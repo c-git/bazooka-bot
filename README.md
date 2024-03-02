@@ -4,9 +4,13 @@ This is the source code for the bot for the [Bazooka Alliance Discord Server](ht
 
 This is the rust replacement for the bot [originally](https://github.com/fone-git/bazooka-bot) written in python.
 
-# List of TODOs for pending features
+# Features / TODO list
 
-# Unranked unranked
+<!-- Leave completed items as a feature list / what is being considered for implementation -->
+
+Note: Some checked off items my not be complete only started but at the time of writing (2024-03-02) there is only one item like that, "schedule_start_unranked"
+
+# Unranked event
 
 - [x] `/unranked idea`
   - [x] `add(description)`
@@ -22,13 +26,14 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
   - [x] `results`
   - [ ] `other_set(user, score)` (Auth Req)
   - [ ] `other_remove(user)` (Auth Req)
-  - [ ] `set_message(message)` (Auth Req)
-- [x] `/unranked schedule_reset(date_time)` (Auth Req)
+  - [x] `set_message(message)` (Auth Req)
+- [ ] `event_start` (See [event start](#event-start) for details) (Auth Req)
+- [x] `/unranked schedule_event_start(date_time)` (Auth Req)
 
-## Scheduled Actions
+## Event Start
 
 At the start of unranked each season the following should happen.
-It will be scheduled manually each season by an officer.
+It should be scheduled manually each season by an officer.
 
 - [ ] Verify user is authorized
 - [ ] Print current info before clearing
@@ -46,3 +51,5 @@ It will be scheduled manually each season by an officer.
 - [ ] Send a status messages when it connects (including the version)
 - [x] Change results (vote counts and leader board) to (embeds)[https://docs.rs/poise/latest/poise/serenity_prelude/struct.CreateMessage.html#examples]
 - [ ] Add ability for owner to download the data files to facilitate testing before uploading a version
+- [ ] Make reset a 2 stage process with a confirmation
+- [ ] Add a permission that can be used as a default_permission to tell slash commands just not to show if a user doesn't have it instead of returning a no permissions message

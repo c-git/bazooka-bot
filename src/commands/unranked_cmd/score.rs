@@ -36,9 +36,9 @@ pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
     display_scores_with_msg(
         &ctx,
         if did_remove {
-            "Score Removed"
+            "Score removed"
         } else {
-            "Score not Found"
+            "**Score not found**"
         },
     )
     .await?;
@@ -73,10 +73,20 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 /// Set message displayed with scores (Replaces current message) [aliases("msg")]
 pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
+    let is_cleared = msg.is_none();
     let msg = msg.unwrap_or_default();
     ctx.data()
         .unranked
         .score_message(ctx.author_id_number(), msg)?;
+    display_scores_with_msg(
+        &ctx,
+        if is_cleared {
+            "Message cleared"
+        } else {
+            "Message set"
+        },
+    )
+    .await?;
     display_scores_with_msg(&ctx, "Message Set").await?;
     tracing_handler_end()
 }
@@ -86,7 +96,7 @@ async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()>
     ctx.data()
         .unranked
         .score_set(ctx.author_to_user_record().await, score)?;
-    display_scores_with_msg(&ctx, "Score Set").await?;
+    display_scores_with_msg(&ctx, "Score set").await?;
     tracing_handler_end()
 }
 

@@ -96,8 +96,17 @@ impl Display for Idea {
 }
 impl Display for Ideas {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Some(leading_index) = self.leading().map(|x| x.0) else {
+            // If there is no leading so there is also no data, no action needed
+            debug_assert!(self.data.is_empty());
+            return Ok(());
+        };
         for (i, idea) in self.data.iter().enumerate() {
-            writeln!(f, "{}. {idea}", i + 1)?
+            if i == leading_index {
+                writeln!(f, "**{}. {idea}**", i + 1)?
+            } else {
+                writeln!(f, "{}. {idea}", i + 1)?
+            }
         }
         Ok(())
     }

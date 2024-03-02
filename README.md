@@ -53,3 +53,4 @@ It should be scheduled manually each season by an officer.
 - [ ] Add ability for owner to download the data files to facilitate testing before uploading a version
 - [ ] Make reset a 2 stage process with a confirmation
 - [ ] Add a permission that can be used as a default_permission to tell slash commands just not to show if a user doesn't have it instead of returning a no permissions message
+- [ ] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas

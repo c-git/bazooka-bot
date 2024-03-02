@@ -75,12 +75,14 @@ async fn is_auth(ctx: Context<'_>) -> anyhow::Result<bool> {
         ctx.say("This command is only allowed from a server")
             .await?;
     };
-    warn!(
-        "User: {:?} ({}) attempted to execute {:?} but they did not have role# {role_id}.",
-        ctx.author().name,
-        ctx.author().id,
-        ctx.command().qualified_name,
-    );
+    if !result {
+        warn!(
+            "User: {:?} ({}) attempted to execute {:?} but they did not have role# {role_id}.",
+            ctx.author().name,
+            ctx.author().id,
+            ctx.command().qualified_name,
+        );
+    }
     info!("END");
     Ok(result)
 }

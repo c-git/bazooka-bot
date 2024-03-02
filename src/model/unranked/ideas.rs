@@ -236,7 +236,7 @@ impl Ideas {
     }
 
     /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest
-    pub fn leading(&self) -> Option<(usize,&Idea)> {
+    pub fn leading(&self) -> Option<(usize, &Idea)> {
         let mut result = (0, self.data.first()?);
         for x in self.data.iter().enumerate().skip(1) {
             if result.1.voters.len() < x.1.voters.len() {
@@ -343,12 +343,12 @@ mod tests {
         4, Some("only"), vec![])]
     #[case::only_one_over(vec![
             ("first", vec![1,2,3,4]),("second", vec![1,2,3])
-        ].into(), 
+        ].into(),
         3, Some("first"), vec!["first"])]
     #[case::pair_equal(vec![
             ("first", vec![1,2,3,4]),
             ("second", vec![1,2,3,4])
-        ].into(), 
+        ].into(),
         3, Some("first"), vec!["first", "second"])]
     #[case::multiple_equal_(vec![
             ("1st", vec![1,2,3,4]),
@@ -360,7 +360,7 @@ mod tests {
             ("7th", vec![1,2,3]),
             ("8th", vec![]),
             ("9th", vec![1,2,3,4]),
-        ].into(), 
+        ].into(),
         3, Some("4th"), vec!["4th", "5th", "6th","1st","2nd","3rd","9th"])]
     fn test_name(
         #[case] ideas: Ideas,

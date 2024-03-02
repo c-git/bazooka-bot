@@ -71,8 +71,9 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 )]
 #[instrument(name = "unranked-score-message", skip(ctx))]
 /// Set message displayed with scores (Replaces current message) [aliases("msg")]
-pub async fn message(ctx: Context<'_>, #[rest] msg: String) -> anyhow::Result<()> {
+pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
+    let msg = msg.unwrap_or_default();
     ctx.data()
         .unranked
         .score_message(ctx.author_id_number(), msg)?;

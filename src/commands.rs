@@ -3,7 +3,10 @@
 use poise::serenity_prelude::Mentionable;
 use tracing::{error, info, instrument, warn};
 
-use crate::{commands::general::uptime, AuthorPreferredDisplay as _, Context, Data};
+use crate::{
+    commands::general::{register, uptime},
+    AuthorPreferredDisplay as _, Context, Data,
+};
 
 mod general;
 mod unranked_cmd;
@@ -39,7 +42,14 @@ async fn call_to_parent_command(ctx: Context<'_>) -> anyhow::Result<()> {
 }
 
 pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
-    vec![ping(), help(), general::version(), uptime(), unranked()]
+    vec![
+        ping(),
+        help(),
+        general::version(),
+        uptime(),
+        unranked(),
+        register(),
+    ]
 }
 
 #[instrument(skip(ctx))]

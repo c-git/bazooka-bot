@@ -1,9 +1,10 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use anyhow::Context as _;
 use bazooka_bot::{commands_list, AccessSecrets as _, Data};
-use poise::serenity_prelude::GuildId;
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use poise::serenity_prelude::{GuildId, UserId};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
@@ -20,10 +21,20 @@ async fn main(
     let guild_id: GuildId = secret_store.access_secret_parse("GUILD_ID")?;
     let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
     let is_production = std::env::var("SHUTTLE").is_ok();
+    let owners: HashSet<UserId> = secret_store
+        .access_secret_string("OWNERS")?
+        .split(',')
+        .map(|x| {
+            x.parse::<u64>()
+                .context("failed to parse owner")
+                .map(UserId::new)
+        })
+        .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: commands_list(),
+            owners,
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(

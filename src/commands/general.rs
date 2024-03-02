@@ -70,3 +70,10 @@ pub async fn version(ctx: Context<'_>) -> anyhow::Result<()> {
     ctx.say(msg).await?;
     tracing_handler_end()
 }
+
+#[poise::command(hide_in_help, prefix_command, slash_command, owners_only)]
+#[instrument(name = "register", skip(ctx))]
+pub async fn register(ctx: Context<'_>) -> anyhow::Result<()> {
+    poise::builtins::register_application_commands_buttons(ctx).await?;
+    Ok(())
+}

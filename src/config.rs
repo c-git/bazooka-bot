@@ -9,7 +9,7 @@ use crate::{secrets::AccessSecrets as _, KeyName};
 
 #[derive(Debug)]
 pub struct StartupConfig {
-    pub guild_id: GuildId,
+    pub registration_guild_id: Option<GuildId>,
     pub owners: HashSet<UserId>,
     pub is_production: bool,
 }
@@ -18,12 +18,14 @@ pub struct StartupConfig {
 pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
+
     pub persist: PersistInstance,
 }
 
 impl StartupConfig {
     pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<Self> {
-        let guild_id = KeyName::GuildId.get_stored_non_secret_parse(secret_store)?;
+        let guild_id =
+            KeyName::RegistrationGuildId.get_stored_non_secret_parse_opt::<GuildId>(secret_store);
 
         let owners: HashSet<UserId> = KeyName::Owners
             .get_stored_non_secret_string(secret_store)?
@@ -38,7 +40,7 @@ impl StartupConfig {
         let is_production = std::env::var("SHUTTLE").is_ok();
 
         Ok(Self {
-            guild_id,
+            registration_guild_id: guild_id,
             owners,
             is_production,
         })

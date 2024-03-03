@@ -5,10 +5,11 @@ use std::str::FromStr;
 use anyhow::{bail, Context as _};
 use secrecy::{zeroize::DefaultIsZeroes, Secret, SecretString};
 use shuttle_secrets::SecretStore;
+use tracing::warn;
 
 pub enum KeyName {
     DiscordToken,
-    GuildId,
+    RegistrationGuildId,
     AuthRoleId,
     Owners,
     ChannelUnrankedId,
@@ -20,7 +21,7 @@ impl AsRef<str> for KeyName {
     fn as_ref(&self) -> &str {
         match self {
             KeyName::DiscordToken => "DISCORD_TOKEN",
-            KeyName::GuildId => "GUILD_ID",
+            KeyName::RegistrationGuildId => "REGISTRATION_GUILD_ID",
             KeyName::AuthRoleId => "AUTH_ROLE_ID",
             KeyName::Owners => "OWNERS",
             KeyName::ChannelUnrankedId => "CHANNEL_UNRANKED_ID",
@@ -58,6 +59,18 @@ impl KeyName {
         secret_store: &SecretStore,
     ) -> anyhow::Result<F> {
         secret_store.access_secret_parse(self.as_ref())
+    }
+    pub fn get_stored_non_secret_parse_opt<F: FromStr>(
+        &self,
+        secret_store: &SecretStore,
+    ) -> Option<F> {
+        match secret_store.access_secret_parse(self.as_ref()) {
+            Ok(x) => Some(x),
+            Err(_) => {
+                warn!("failed to optionally load {}, using None", self.as_ref());
+                None
+            }
+        }
     }
 }
 

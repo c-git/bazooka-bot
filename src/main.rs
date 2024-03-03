@@ -6,7 +6,7 @@ use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
-use tracing::info;
+use tracing::{error, info};
 
 #[shuttle_runtime::main]
 async fn main(
@@ -43,21 +43,22 @@ async fn main(
                     poise::builtins::register_globally(ctx, &framework.options().commands)
                         .await
                         .context("failed to register the bot globally")?;
-                } else {
-                    info!("Development run detected going to register guild: {}", startup_config.guild_id);
+                } else if let Some(guild_id) = startup_config.registration_guild_id {
+                    info!("Development run detected going to register guild: {guild_id}");
                     poise::builtins::register_in_guild(
                         ctx,
                         &framework.options().commands,
-                        startup_config.guild_id,
+                        guild_id,
                     )
                     .await
                     .with_context(|| {
                         format!(
-                            "failed to register {:?} in guild: {}",
-                            ready.user.name,
-                            startup_config.guild_id
+                            "failed to register {:?} in guild: {guild_id}",
+                            ready.user.name
                         )
                     })?;
+                } else {
+                    error!("Development run detected but no guild ID found so slash commands NOT registered");
                 }
                 info!("{} is connected!", ready.user.name);
                 Ok(Data::new(shared_config))

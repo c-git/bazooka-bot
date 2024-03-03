@@ -282,31 +282,15 @@ impl Ideas {
         Some(result)
     }
 
-    /// Returns the list of ideas above the threshold sorted by number of votes then by insertion order
-    pub fn above_threshold(&self) -> Vec<&Idea> {
-        let mut result: Vec<&Idea> = self
-            .data
-            .iter()
-            .filter(|idea| idea.voters.len() > self.discard_threshold)
-            .collect();
-        result.sort_by_key(|&idea| -(idea.voters.len() as i32)); // Rev wouldn't work because we need to keep them in inserted order
-        debug_assert!(
-            (|| {
-                if result.is_empty() {
-                    return true;
-                }
-                let leading = self.leading().expect(
-                    "if result is not empty then at least one value exists so the should be a leading",
-                );
-                result.first().unwrap() == &leading.1
-            })(),
-            "leading and first returned value should be the same if returned list is not empty"
-        );
-        result
-    }
-
     /// Discards all ideas at or below the threshold and clears the votes of the remaining ideas
+    /// The order of the ideas after reset is guaranteed to be sorted by their previously vote counts
+    /// and still in the order they appeared otherwise. The previously leading ideas is guaranteed to
+    // be the first one if it existed
     pub fn reset_with_threshold(&mut self) {
+        // Sort ideas in required order (see doc string)
+        self.data.sort_by_key(|idea| -(idea.voters.len() as i32)); // Rev wouldn't work because we need to keep them in inserted order
+
+        // Remove ideas at or below the line resetting the votes on the rest
         self.data.retain_mut(|idea| {
             if idea.voters.len() > self.discard_threshold {
                 idea.voters.clear();
@@ -389,7 +373,6 @@ mod tests {
                 ..Default::default()
             };
             assert!(ideas.leading().is_none());
-            assert!(ideas.above_threshold().is_empty());
         }
     }
 
@@ -424,17 +407,22 @@ mod tests {
         ],3).into(),
         Some("4th"), vec!["4th", "5th", "6th","1st","2nd","3rd","9th"])]
     fn test_name(
-        #[case] ideas: Ideas,
+        #[case] mut ideas: Ideas,
         #[case] expected_leading_desc: Option<&str>,
         #[case] expected_above_ideas_desc: Vec<&str>,
     ) {
-        let actual_leading_desc = ideas.leading().map(|idea| &idea.1.description[..]);
+        let actual_leading_desc = ideas.leading().map(|idea| idea.1.description.clone());
 
-        let actual_above_ideas_desc: Vec<&str> = ideas
-            .above_threshold()
-            .iter()
-            .map(|x| &x.description[..])
-            .collect();
+        ideas.reset_with_threshold(); // Do reset to test remaining descriptions and their order
+
+        let actual_above_ideas_desc: Vec<String> =
+            ideas.data.into_iter().map(|x| x.description).collect();
+
+        // Convert to str to make input easier
+
+        let actual_leading_desc = actual_leading_desc.as_ref().map(|x| &x[..]);
+        let actual_above_ideas_desc: Vec<&str> =
+            actual_above_ideas_desc.iter().map(|x| &x[..]).collect();
 
         assert_eq!(actual_leading_desc, expected_leading_desc, "check leading");
         assert_eq!(

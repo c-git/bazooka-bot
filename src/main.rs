@@ -44,7 +44,7 @@ async fn main(
                         .await
                         .context("failed to register the bot globally")?;
                 } else {
-                    info!("Development run detected going to register guild: {guild_id}");
+                    info!("Development run detected going to register guild: {}", startup_config.guild_id);
                     poise::builtins::register_in_guild(
                         ctx,
                         &framework.options().commands,
@@ -53,8 +53,9 @@ async fn main(
                     .await
                     .with_context(|| {
                         format!(
-                            "failed to register {:?} in guild: {guild_id}",
-                            ready.user.name
+                            "failed to register {:?} in guild: {}",
+                            ready.user.name,
+                            startup_config.guild_id
                         )
                     })?;
                 }

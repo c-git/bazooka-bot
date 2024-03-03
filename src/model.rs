@@ -8,12 +8,8 @@
 //! functions that need to take the lock on the mutex inside of modules called
 //! `protected_ops`` with the rule that they may not call any other functions in the same module
 
-use std::time::Instant;
-
 use anyhow::Context as _;
-use poise::serenity_prelude::RoleId;
 use shuttle_persist::PersistInstance;
-use shuttle_secrets::SecretStore;
 use tracing::{error, info};
 
 use crate::config::SharedConfig;

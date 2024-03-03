@@ -51,13 +51,13 @@ impl KeyName {
         &self,
         secret_store: &SecretStore,
     ) -> anyhow::Result<String> {
-        Ok(secret_store.access_secret_string(self.as_ref())?)
+        secret_store.access_secret_string(self.as_ref())
     }
     pub fn get_stored_non_secret_parse<F: FromStr>(
         &self,
         secret_store: &SecretStore,
     ) -> anyhow::Result<F> {
-        Ok(secret_store.access_secret_parse(self.as_ref())?)
+        secret_store.access_secret_parse(self.as_ref())
     }
 }
 

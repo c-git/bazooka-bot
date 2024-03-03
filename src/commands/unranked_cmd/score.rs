@@ -6,7 +6,7 @@ use crate::{
         unranked::scores::{ScoreValue, Scores},
         user_serde::UserRecordSupport as _,
     },
-    Context, Data,
+    sanitize_markdown, Context, Data,
 };
 use poise::{
     serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
@@ -77,7 +77,7 @@ pub async fn set(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
 pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     let is_cleared = msg.is_none();
-    let msg = msg.unwrap_or_default();
+    let msg = sanitize_markdown(msg.unwrap_or_default());
     ctx.data()
         .unranked
         .scores_message(ctx.author_id_number(), msg)?;

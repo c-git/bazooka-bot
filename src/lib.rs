@@ -2,6 +2,8 @@
 //! It is split into two main parts. The parts that receive commands from discord [`commands`] and
 //! the part that handles the actual logic of what to do in the [`model`]
 
+use tracing::{info, instrument};
+
 pub use self::{
     commands::commands_list,
     config::{SharedConfig, StartupConfig},
@@ -55,4 +57,19 @@ trait Resettable: Default {
     fn reset(&mut self) {
         *self = Default::default();
     }
+}
+
+/// Removes identified problems with inputs
+/// Not trying to remove all markdown just the parts that are
+/// likely to cause issues. More will be added as needed
+#[must_use]
+#[instrument]
+fn sanitize_markdown(s: String) -> String {
+    const PATTERNS: [&str; 4] = ["**", "__", "```", "\n"];
+    let mut result = s;
+    for pattern in PATTERNS.iter() {
+        result = result.replace(pattern, "");
+    }
+    info!(result);
+    result
 }

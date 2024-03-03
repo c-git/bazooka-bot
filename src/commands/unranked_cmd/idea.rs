@@ -16,7 +16,7 @@ use crate::{
         unranked::ideas::{IdeaId, Ideas},
         user_serde::UserRecordSupport as _,
     },
-    Data,
+    sanitize_markdown, Data,
 };
 
 #[poise::command(
@@ -48,6 +48,7 @@ pub async fn idea(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Adds a new idea
 pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
+    let description = sanitize_markdown(description);
     ctx.data()
         .unranked
         .idea_add(ctx.author_id_number(), description)?;
@@ -64,6 +65,7 @@ pub async fn edit(
     #[rest] new_description: String,
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
+    let new_description = sanitize_markdown(new_description);
     let id: IdeaId = id.into();
     ctx.data()
         .unranked

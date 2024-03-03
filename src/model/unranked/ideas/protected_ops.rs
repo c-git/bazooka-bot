@@ -103,6 +103,13 @@ impl Unranked {
         Ok(())
     }
 
+    pub(crate) fn idea_set_threshold(&self, threshold: usize) -> anyhow::Result<()> {
+        let mut guard = self.guard_idea()?;
+        guard.discard_threshold = threshold;
+        self.save_idea(&guard)?;
+        Ok(())
+    }
+
     /// Removes and returns the leading idea if one exists
     pub fn ideas_pop_leading(&self) -> anyhow::Result<Option<Idea>> {
         let mut guard = self.guard_idea()?;

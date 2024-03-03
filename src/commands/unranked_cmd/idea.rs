@@ -33,6 +33,7 @@ use crate::{
         "vote_all",
         "unvote_all",
         "display",
+        "threshold",
         "reset",
     )
 )]
@@ -130,6 +131,23 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     display_ideas(&ctx, is_verbose).await
+}
+
+#[poise::command(
+    prefix_command,
+    slash_command,
+    track_edits,
+    guild_only = true,
+    check = "is_auth"
+)]
+#[instrument(name = "unranked-score-threshold", skip(ctx))]
+/// Sets the Discard Threshold for resetting ideas
+/// Ideas with this many votes or less will be removed
+pub async fn threshold(ctx: Context<'_>, threshold: usize) -> anyhow::Result<()> {
+    tracing_handler_start(&ctx).await;
+    ctx.data().unranked.idea_set_threshold(threshold)?;
+    display_ideas_with_msg(&ctx, format!("Threshold set to {threshold}")).await?;
+    tracing_handler_end()
 }
 
 #[poise::command(prefix_command, guild_only = true, check = "is_auth")]

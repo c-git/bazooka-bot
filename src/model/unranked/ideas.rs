@@ -138,12 +138,28 @@ impl Ideas {
     pub async fn verbose_display(&self, cache_http: impl CacheHttp) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
+        writeln!(
+            result,
+            "__Discard Threshold: {}__\n",
+            self.discard_threshold
+        )?;
+        let Some(leading_index) = self.leading().map(|x| x.0) else {
+            // If there is no leading so there is also no data, no further action needed
+            debug_assert!(self.data.is_empty());
+            return Ok(result);
+        };
         for (i, idea) in self.data.iter().enumerate() {
             writeln!(
                 result,
-                "{}. {idea} Suggested by: `{}`",
+                "{2}{3}{0}. {idea}{3}{2} Suggested by: `{1}`",
                 i + 1,
-                idea.creator.to_user(&cache_http).await?.name
+                idea.creator.to_user(&cache_http).await?.name,
+                if idea.voters.len() > self.discard_threshold {
+                    "__"
+                } else {
+                    ""
+                },
+                if leading_index == i { "**" } else { "" }
             )?;
             if let Some(voters) = idea.voters_as_string(&cache_http).await? {
                 writeln!(result, "{voters}")?;

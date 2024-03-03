@@ -99,7 +99,23 @@ pub async fn do_start_event(
 )]
 #[instrument(name = "unranked-schedule_start_event", skip(ctx))]
 /// Sets when the next unranked is expected to start
-pub async fn schedule_start_event(ctx: Context<'_>) -> anyhow::Result<()> {
+pub async fn schedule_start_event(
+    ctx: Context<'_>,
+    #[description = "A unix timestamp. If you need more info just leave out argument for more info to be returned"]
+    unix_timestamp: Option<i32>,
+) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    todo!()
+    if let Some(unix_timestamp) = unix_timestamp {
+        ctx.say(format!("<t:{0}:F> {0}", unix_timestamp)).await?;
+    } else {
+        info!("Info given, command not executed");
+        ctx.reply(
+            "This command expects a unix timestamp.
+For help with generating a timestamp see <https://c-git.github.io/misc/discord/>
+you can test your timestamp by pasting the string given on the site in discord.
+Note: the command expects **ONLY** the number part",
+        )
+        .await?;
+    }
+    tracing_handler_end()
 }

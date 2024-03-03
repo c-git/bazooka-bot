@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, AccessSecrets as _, Data, KeyName, SharedConfig, StartupConfig};
+use bazooka_bot::{commands_list, get_secret_discord_token, Data, SharedConfig, StartupConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use secrecy::ExposeSecret;
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
@@ -17,7 +18,7 @@ async fn main(
     info!("Bot version is {}", version::version!());
 
     // Load setup values
-    let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
+    let discord_token = get_secret_discord_token(&secret_store)?;
     let startup_config =
         StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
     let shared_config =
@@ -66,7 +67,7 @@ async fn main(
                 if let Some(channel) = startup_config.channel_bot_status{
                     channel.say(ctx, connect_msg).await?;
                 } else{
-                    warn!("Not sending connection notification because {} not set", KeyName::ChannelBotStatus.as_ref());
+                    warn!("Not sending connection notification because channel_bot_status not set");
                 }
                 let data = Data::new(shared_config);
                 info!("END OF SETUP CLOSURE");
@@ -76,7 +77,7 @@ async fn main(
         .build();
 
     let client = ClientBuilder::new(
-        discord_token,
+        discord_token.expose_secret(),
         GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
     .framework(framework)

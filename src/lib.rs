@@ -8,7 +8,7 @@ pub use self::{
     commands::commands_list,
     config::{SharedConfig, StartupConfig},
     model::Data,
-    secrets::{AccessSecrets, KeyName},
+    secrets::get_secret_discord_token,
 };
 
 mod commands;

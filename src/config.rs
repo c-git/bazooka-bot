@@ -5,7 +5,7 @@ use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 
-use crate::KeyName;
+use crate::secrets::KeyName;
 
 #[derive(Debug)]
 pub struct StartupConfig {
@@ -24,10 +24,10 @@ pub struct SharedConfig {
 
 impl StartupConfig {
     pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<Self> {
-        let guild_id = KeyName::RegistrationGuildId.get_stored_non_secret_parse_opt(secret_store);
+        let guild_id = KeyName::RegistrationGuildId.get_non_secret_parse_opt(secret_store);
 
         let owners: HashSet<UserId> = KeyName::Owners
-            .get_stored_non_secret_string(secret_store)?
+            .get_non_secret_string(secret_store)?
             .split(',')
             .map(|x| {
                 x.parse::<u64>()
@@ -37,8 +37,7 @@ impl StartupConfig {
             .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
         let is_production = std::env::var("SHUTTLE").is_ok();
-        let channel_bot_status =
-            KeyName::ChannelBotStatus.get_stored_non_secret_parse_opt(secret_store);
+        let channel_bot_status = KeyName::ChannelBotStatus.get_non_secret_parse_opt(secret_store);
 
         Ok(Self {
             registration_guild_id: guild_id,
@@ -54,7 +53,7 @@ impl SharedConfig {
         secret_store: &SecretStore,
         persist: PersistInstance,
     ) -> anyhow::Result<&'static Self> {
-        let auth_role_id = KeyName::AuthRoleId.get_stored_non_secret_parse(secret_store)?;
+        let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
         let result = Box::new(Self {
             start_instant: Instant::now(),
             auth_role_id,

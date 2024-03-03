@@ -173,6 +173,10 @@ impl Ideas {
             }
             writeln!(result)?; // Add separating line
         }
+        writeln!(
+            result,
+            "_Bold is leading idea and underlined is above threshold_"
+        )?;
         Ok(result)
     }
 

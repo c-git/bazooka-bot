@@ -63,6 +63,9 @@ pub async fn do_start_event(
 
     // Get the leading idea (winning at this point as it's the end) and the ones above the threshold
     let leading = data.unranked.ideas_pop_leading()?;
+    channel_id
+        .say(&cache_http, "Extracting leading idea")
+        .await?;
 
     // Do resets
     do_ideas_reset(&cache_http, channel_id, data).await?;

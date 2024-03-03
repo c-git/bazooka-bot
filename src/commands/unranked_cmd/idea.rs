@@ -127,7 +127,7 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
     change_vote_all(ctx, false).await
 }
 
-#[poise::command(prefix_command, slash_command, track_edits)]
+#[poise::command(prefix_command, slash_command, track_edits, aliases("disp"))]
 #[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
 /// Displays all ideas optionally verbosely
 pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {

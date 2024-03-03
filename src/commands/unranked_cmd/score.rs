@@ -113,7 +113,6 @@ pub async fn do_scores_reset(
     channel_id.say(&cache_http, "Scores before reset").await?;
     display_scores_channel(&cache_http, channel_id, data).await?;
     data.unranked.scores_reset()?;
-    display_scores_channel(&cache_http, channel_id, data).await?;
     tracing_handler_end()
 }
 

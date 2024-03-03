@@ -141,7 +141,7 @@ pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Resu
     check = "is_auth"
 )]
 #[instrument(name = "unranked-score-threshold", skip(ctx))]
-/// Sets the Discard Threshold for resetting ideas
+/// Sets the Discard Threshold for resetting ideas.
 /// Ideas with this many votes or less will be removed
 pub async fn threshold(ctx: Context<'_>, threshold: usize) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;

@@ -34,15 +34,15 @@ pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
 
 #[poise::command(
     hide_in_help,
-    prefix_command,
+    prefix_command, // TODO 4: Remove prefix command after scheduling be comes possible
     slash_command,
-    track_edits,
     check = "is_auth"
 )]
 #[instrument(name = "unranked-start_event", skip(ctx))]
+/// Resets ideas and scores for the start of the new event and sets the message with the leading idea
 pub async fn start_event(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    ctx.reply("Reset Started").await?;
+    ctx.reply("Request started").await?;
     do_start_event(ctx, ctx.channel_id(), ctx.data()).await?;
     tracing_handler_end()
 }
@@ -80,6 +80,10 @@ pub async fn do_start_event(
 
     display_scores_channel(&cache_http, channel_id, data).await?;
 
+    channel_id
+        .say(&cache_http, "Setup successfully completed GLHF")
+        .await?;
+
     tracing_handler_end()
 }
 
@@ -91,6 +95,7 @@ pub async fn do_start_event(
     check = "is_auth"
 )]
 #[instrument(name = "unranked-schedule_start_event", skip(ctx))]
+/// Sets when the next unranked is expected to start
 pub async fn schedule_start_event(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     todo!()

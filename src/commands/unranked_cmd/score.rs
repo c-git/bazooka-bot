@@ -103,7 +103,7 @@ pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_end()
 }
 
-#[instrument(skip(cache_http))]
+#[instrument(skip(cache_http, data))]
 pub async fn do_scores_reset(
     cache_http: impl CacheHttp,
     channel_id: ChannelId,
@@ -160,7 +160,7 @@ fn display_generate_reply(ctx: &Context<'_>) -> anyhow::Result<CreateReply> {
     Ok(CreateReply::default().embed(embed))
 }
 
-#[instrument]
+#[instrument(skip(data))]
 fn display_generate_message(data: &Data) -> anyhow::Result<CreateMessage> {
     info!("START");
     let embed = display_generate_embed(data)?;
@@ -168,7 +168,7 @@ fn display_generate_message(data: &Data) -> anyhow::Result<CreateMessage> {
     Ok(CreateMessage::new().embed(embed))
 }
 
-#[instrument]
+#[instrument(skip(data))]
 fn display_generate_embed(data: &Data) -> anyhow::Result<CreateEmbed> {
     info!("START");
     let scores_as_string = data.unranked.scores_as_string()?;
@@ -179,7 +179,7 @@ fn display_generate_embed(data: &Data) -> anyhow::Result<CreateEmbed> {
     Ok(embed)
 }
 
-#[instrument(skip(cache_http))]
+#[instrument(skip(cache_http, data))]
 pub async fn display_scores_channel(
     cache_http: impl CacheHttp,
     channel_id: ChannelId,

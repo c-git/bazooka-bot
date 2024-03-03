@@ -19,7 +19,7 @@ use self::unranked::Unranked;
 pub(crate) mod unranked;
 pub(crate) mod user_serde;
 
-#[derive(Debug)]
+// #[derive(Debug)]
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
     pub unranked: Unranked,

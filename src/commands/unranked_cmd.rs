@@ -47,7 +47,7 @@ pub async fn start_event(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_end()
 }
 
-#[instrument(skip(cache_http))]
+#[instrument(skip(cache_http, data))]
 pub async fn do_start_event(
     cache_http: impl CacheHttp,
     channel_id: ChannelId,

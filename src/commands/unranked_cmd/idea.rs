@@ -160,7 +160,7 @@ pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_end()
 }
 
-#[instrument(skip(cache_http))]
+#[instrument(skip(cache_http, data))]
 pub async fn do_ideas_reset(
     cache_http: impl CacheHttp,
     channel_id: ChannelId,
@@ -182,7 +182,7 @@ pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Resul
     tracing_handler_end()
 }
 
-#[instrument(skip(cache_http))]
+#[instrument(skip(cache_http, data))]
 pub async fn display_ideas_channel(
     cache_http: impl CacheHttp,
     channel_id: ChannelId,

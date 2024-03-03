@@ -23,7 +23,7 @@ impl AsRef<str> for KeyName {
             KeyName::DiscordToken => "DISCORD_TOKEN",
             KeyName::RegistrationGuildId => "REGISTRATION_GUILD_ID",
             KeyName::AuthRoleId => "AUTH_ROLE_ID",
-            KeyName::Owners => "OWNERS",
+            KeyName::Owners => "OWNERS", // Comma separated list
             KeyName::ChannelUnrankedId => "CHANNEL_UNRANKED_ID",
             KeyName::ChannelAdminId => "CHANNEL_ADMIN_ID",
             KeyName::ChannelBotStatus => "CHANNEL_BOT_STATUS_ID",
@@ -66,8 +66,12 @@ impl KeyName {
     ) -> Option<F> {
         match secret_store.access_secret_parse(self.as_ref()) {
             Ok(x) => Some(x),
-            Err(_) => {
-                warn!("failed to optionally load {}, using None", self.as_ref());
+            Err(e) => {
+                warn!(
+                    "failed to optionally load {}. Defaulting to use None instead. Error: {}",
+                    self.as_ref(),
+                    e
+                );
                 None
             }
         }

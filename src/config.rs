@@ -1,7 +1,7 @@
 use std::{collections::HashSet, time::Instant};
 
 use anyhow::Context as _;
-use poise::serenity_prelude::{GuildId, RoleId, UserId};
+use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 
@@ -12,6 +12,7 @@ pub struct StartupConfig {
     pub registration_guild_id: Option<GuildId>,
     pub owners: HashSet<UserId>,
     pub is_production: bool,
+    pub channel_bot_status: Option<ChannelId>,
 }
 
 #[derive(Debug)]
@@ -24,8 +25,7 @@ pub struct SharedConfig {
 
 impl StartupConfig {
     pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<Self> {
-        let guild_id =
-            KeyName::RegistrationGuildId.get_stored_non_secret_parse_opt::<GuildId>(secret_store);
+        let guild_id = KeyName::RegistrationGuildId.get_stored_non_secret_parse_opt(secret_store);
 
         let owners: HashSet<UserId> = KeyName::Owners
             .get_stored_non_secret_string(secret_store)?
@@ -38,11 +38,14 @@ impl StartupConfig {
             .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
         let is_production = std::env::var("SHUTTLE").is_ok();
+        let channel_bot_status =
+            KeyName::ChannelBotStatus.get_stored_non_secret_parse_opt(secret_store);
 
         Ok(Self {
             registration_guild_id: guild_id,
             owners,
             is_production,
+            channel_bot_status,
         })
     }
 }

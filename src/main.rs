@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, AccessSecrets as _, Data, SharedConfig, StartupConfig};
+use bazooka_bot::{commands_list, AccessSecrets as _, Data, KeyName, SharedConfig, StartupConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
-use tracing::{error, info};
+use tracing::{error, info, warn};
+use version::version;
 
 #[shuttle_runtime::main]
 async fn main(
@@ -60,7 +61,13 @@ async fn main(
                 } else {
                     error!("Development run detected but no guild ID found so slash commands NOT registered");
                 }
-                info!("{} is connected!", ready.user.name);
+                let connect_msg = format!("{} is connected! Version: {}", ready.user.name, version!());
+                info!("{connect_msg}");
+                if let Some(channel) = startup_config.channel_bot_status{
+                    channel.say(ctx, connect_msg).await?;
+                } else{
+                    warn!("Not sending connection notification because {} not set", KeyName::ChannelBotStatus.as_ref());
+                }
                 Ok(Data::new(shared_config))
             })
         })

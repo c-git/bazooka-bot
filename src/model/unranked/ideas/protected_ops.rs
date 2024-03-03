@@ -3,10 +3,9 @@
 
 use std::sync::MutexGuard;
 
-use crate::{
-    model::{unranked::Unranked, user_serde::UserIdNumber},
-    Context, Resettable as _,
-};
+use poise::serenity_prelude::CacheHttp;
+
+use crate::model::{unranked::Unranked, user_serde::UserIdNumber};
 
 use super::{Idea, IdeaId, Ideas};
 
@@ -49,9 +48,10 @@ impl Unranked {
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
+        allow_remove_other: bool,
     ) -> anyhow::Result<Idea> {
         let mut guard = self.guard_idea()?;
-        let result = guard.remove(id, user_id_number)?;
+        let result = guard.remove(id, user_id_number, allow_remove_other)?;
         self.save_idea(&guard)?;
         Ok(result)
     }
@@ -83,14 +83,14 @@ impl Unranked {
 
     pub(crate) async fn ideas_as_string(
         &self,
-        ctx: &Context<'_>,
+        cache_http: impl CacheHttp,
         is_verbose: bool,
     ) -> anyhow::Result<String> {
         if is_verbose {
             // Ideas have to be cloned because the guard cannot be held across the await boundary because it is not send
             // Would be a bad idea to hold it anyway because that could lead to a deadlock
             let ideas = { self.guard_idea()?.clone() };
-            ideas.verbose_display(ctx).await
+            ideas.verbose_display(cache_http).await
         } else {
             Ok(self.guard_idea()?.to_string())
         }
@@ -98,9 +98,17 @@ impl Unranked {
 
     pub(crate) fn ideas_reset(&self) -> anyhow::Result<()> {
         let mut guard = self.guard_idea()?;
-        guard.reset();
+        guard.reset_with_threshold();
         self.save_idea(&guard)?;
         Ok(())
+    }
+
+    /// Removes and returns the leading idea if one exists
+    pub fn ideas_pop_leading(&self) -> anyhow::Result<Option<Idea>> {
+        let mut guard = self.guard_idea()?;
+        let result = guard.pop_leading();
+        self.save_idea(&guard)?;
+        Ok(result)
     }
 
     /// Returns the description of the Idea that is leading if there is one
@@ -114,10 +122,10 @@ impl Unranked {
     }
 
     /// Returns the descriptions of the ideas that are above the threshold (The first is the one leading if over the threshold)
-    pub(crate) fn ideas_above_threshold(&self, threshold: usize) -> anyhow::Result<Vec<String>> {
+    pub(crate) fn ideas_above_threshold(&self) -> anyhow::Result<Vec<String>> {
         let guard = self.guard_idea()?;
         let idea = guard
-            .above_threshold(threshold)
+            .above_threshold()
             .iter()
             .map(|idea| idea.description.clone())
             .collect();

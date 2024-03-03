@@ -6,9 +6,12 @@ use crate::{
         unranked::scores::{ScoreValue, Scores},
         user_serde::UserRecordSupport as _,
     },
-    Context,
+    Context, Data,
 };
-use poise::{serenity_prelude::CreateEmbed, CreateReply};
+use poise::{
+    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
+    CreateReply,
+};
 use std::fmt::Debug;
 use tracing::{info, instrument};
 
@@ -95,16 +98,22 @@ pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::R
 /// Sets scores back to the default
 pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    do_scores_reset(&ctx).await?;
+    do_scores_reset(&ctx, ctx.channel_id(), ctx.data()).await?;
+    ctx.reply("Scores reset").await?;
     tracing_handler_end()
 }
 
-#[instrument(skip(ctx))]
-pub async fn do_scores_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
+#[instrument(skip(cache_http))]
+pub async fn do_scores_reset(
+    cache_http: impl CacheHttp,
+    channel_id: ChannelId,
+    data: &Data,
+) -> anyhow::Result<()> {
     info!("START");
-    display_scores_with_msg(ctx, "Scores before reset").await?;
-    ctx.data().unranked.scores_reset()?;
-    display_scores_with_msg(ctx, "---\nScores reset").await?;
+    channel_id.say(&cache_http, "Scores before reset").await?;
+    display_scores_channel(&cache_http, channel_id, data).await?;
+    data.unranked.scores_reset()?;
+    display_scores_channel(&cache_http, channel_id, data).await?;
     tracing_handler_end()
 }
 
@@ -118,12 +127,12 @@ async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()>
 }
 
 #[instrument(skip(ctx))]
-async fn do_display_scores<S: Into<String> + Debug>(
+pub async fn do_display_scores<S: Into<String> + Debug>(
     ctx: &Context<'_>,
     extra_msg: Option<S>,
 ) -> anyhow::Result<()> {
     info!("START");
-    let mut builder = display_generate(ctx)?;
+    let mut builder = display_generate_reply(ctx)?;
     if let Some(msg) = extra_msg {
         builder = builder.content(msg);
     }
@@ -143,10 +152,41 @@ async fn display_scores(ctx: &Context<'_>) -> anyhow::Result<()> {
     do_display_scores::<&str>(ctx, None).await
 }
 
-fn display_generate(ctx: &Context<'_>) -> anyhow::Result<CreateReply> {
-    let scores_as_string = ctx.data().unranked.scores_as_string()?;
+#[instrument(skip(ctx))]
+fn display_generate_reply(ctx: &Context<'_>) -> anyhow::Result<CreateReply> {
+    info!("START");
+    let embed = display_generate_embed(ctx.data())?;
+    info!("END");
+    Ok(CreateReply::default().embed(embed))
+}
+
+#[instrument]
+fn display_generate_message(data: &Data) -> anyhow::Result<CreateMessage> {
+    info!("START");
+    let embed = display_generate_embed(data)?;
+    info!("END");
+    Ok(CreateMessage::new().embed(embed))
+}
+
+#[instrument]
+fn display_generate_embed(data: &Data) -> anyhow::Result<CreateEmbed> {
+    info!("START");
+    let scores_as_string = data.unranked.scores_as_string()?;
     let embed = CreateEmbed::new()
         .title(Scores::DISPLAY_TITLE)
         .description(scores_as_string);
-    Ok(CreateReply::default().embed(embed))
+    info!("END");
+    Ok(embed)
+}
+
+#[instrument(skip(cache_http))]
+pub async fn display_scores_channel(
+    cache_http: impl CacheHttp,
+    channel_id: ChannelId,
+    data: &Data,
+) -> anyhow::Result<()> {
+    info!("START");
+    let builder = display_generate_message(data)?;
+    channel_id.send_message(&cache_http, builder).await?;
+    tracing_handler_end()
 }

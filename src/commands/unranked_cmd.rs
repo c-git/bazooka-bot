@@ -1,11 +1,18 @@
 //! Groups the commands related to the unranked challenge
 
+use poise::serenity_prelude::{CacheHttp, ChannelId};
 use tracing::{info, instrument};
 
 use self::{idea::idea, score::score};
 use crate::{
-    commands::{call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start},
-    Context,
+    commands::{
+        call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start,
+        unranked_cmd::{
+            idea::do_ideas_reset,
+            score::{display_scores_channel, do_scores_reset},
+        },
+    },
+    Context, Data,
 };
 
 mod idea;
@@ -35,14 +42,45 @@ pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "unranked-start_event", skip(ctx))]
 pub async fn start_event(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    // do_start_event()?;
+    ctx.reply("Reset Started").await?;
+    do_start_event(ctx, ctx.channel_id(), ctx.data()).await?;
     tracing_handler_end()
 }
 
-#[instrument]
-fn do_start_event() -> anyhow::Result<()> {
+#[instrument(skip(cache_http))]
+pub async fn do_start_event(
+    cache_http: impl CacheHttp,
+    channel_id: ChannelId,
+    data: &Data,
+) -> anyhow::Result<()> {
     info!("START");
-    todo!()
+    channel_id
+        .say(
+            &cache_http,
+            "Setting up for the start of a new unranked event",
+        )
+        .await?;
+
+    // Get the leading idea (winning at this point as it's the end) and the ones above the threshold
+    let leading = data.unranked.ideas_pop_leading()?;
+
+    // Do resets
+    do_ideas_reset(&cache_http, channel_id, data).await?;
+    do_scores_reset(&cache_http, channel_id, data).await?;
+
+    // Get message for new scores
+    let msg = if let Some(idea) = leading {
+        idea.description
+    } else {
+        "Seems there were no ideas".to_string()
+    };
+
+    // Set message for new scores
+    data.unranked.scores_message(Default::default(), msg)?;
+
+    display_scores_channel(&cache_http, channel_id, data).await?;
+
+    tracing_handler_end()
 }
 
 #[poise::command(

@@ -7,21 +7,23 @@ use tracing::{info, warn};
 use crate::{
     config::SharedConfig,
     model::{user_serde::UserIdNumber, PersistData as _},
-    Context, Resettable,
 };
 
+pub mod migration;
 pub(crate) mod protected_ops;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
 /// If there are any Ideas above a threshold passed then it is guaranteed that the first one returned will also match the output of leading
 pub struct Ideas {
     data: Vec<Idea>,
-}
 
+    /// All ideas with this many votes or less will be removed during reset
+    pub discard_threshold: usize,
+}
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, PartialEq, Eq)]
 pub struct Idea {
     creator: UserIdNumber,
-    description: String,
+    pub description: String,
     voters: Vec<UserIdNumber>,
 }
 
@@ -118,6 +120,10 @@ impl IdeaId {
         let x: usize = self.0.into();
         x - 1 // Convert back down to 0 based
     }
+    fn from_index(value: usize) -> Self {
+        let x = NonZeroUsize::new(value + 1).expect("any usize plus 1 must be non-zero");
+        Self(x)
+    }
 }
 
 impl Ideas {
@@ -128,7 +134,7 @@ impl Ideas {
         self.data.push(value);
     }
 
-    pub async fn verbose_display(&self, ctx: &Context<'_>) -> anyhow::Result<String> {
+    pub async fn verbose_display(&self, cache_http: impl CacheHttp) -> anyhow::Result<String> {
         use std::fmt::Write as _;
         let mut result = String::new();
         for (i, idea) in self.data.iter().enumerate() {
@@ -136,9 +142,9 @@ impl Ideas {
                 result,
                 "{}. {idea} Suggested by: `{}`",
                 i + 1,
-                idea.creator.to_user(ctx).await?.name
+                idea.creator.to_user(&cache_http).await?.name
             )?;
-            if let Some(voters) = idea.voters_as_string(ctx).await? {
+            if let Some(voters) = idea.voters_as_string(&cache_http).await? {
                 writeln!(result, "{voters}")?;
             }
             writeln!(result)?; // Add separating line
@@ -174,13 +180,18 @@ impl Ideas {
     }
 
     /// Attempts to remove the Idea and return it
-    pub fn remove(&mut self, id: IdeaId, user_id_number: UserIdNumber) -> anyhow::Result<Idea> {
+    pub fn remove(
+        &mut self,
+        id: IdeaId,
+        user_id_number: UserIdNumber,
+        allow_remove_other: bool,
+    ) -> anyhow::Result<Idea> {
         let Some(idea) = self.data.get(id.as_index()) else {
             return Err(self.err_invalid_id(id));
         };
 
         // Confirm this user created the Idea
-        if idea.creator != user_id_number {
+        if idea.creator != user_id_number && !allow_remove_other {
             warn!(
                 "Request to remove Idea# {id} by user {user_id_number} but it was created by {}",
                 idea.creator.to_user_id()
@@ -242,7 +253,21 @@ impl Ideas {
     }
 
     pub(crate) fn new(shared_config: &SharedConfig) -> Self {
-        shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        // TODO 4: Disable Migration after data on server upgraded
+        // shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        shared_config
+            .persist
+            .data_load_or_migration(Self::DATA_KEY, crate::migration::migrate_old_ideas)
+    }
+
+    /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest
+    pub fn pop_leading(&mut self) -> Option<Idea> {
+        let lead_index = self.leading()?.0;
+        let idea_id = IdeaId::from_index(lead_index);
+        Some(
+            self.remove(idea_id, Default::default(), true)
+                .expect("we just checked that this ID exists"),
+        )
     }
 
     /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest
@@ -257,11 +282,11 @@ impl Ideas {
     }
 
     /// Returns the list of ideas above the threshold sorted by number of votes then by insertion order
-    pub fn above_threshold(&self, threshold: usize) -> Vec<&Idea> {
+    pub fn above_threshold(&self) -> Vec<&Idea> {
         let mut result: Vec<&Idea> = self
             .data
             .iter()
-            .filter(|idea| idea.voters.len() > threshold)
+            .filter(|idea| idea.voters.len() > self.discard_threshold)
             .collect();
         result.sort_by_key(|&idea| -(idea.voters.len() as i32)); // Rev wouldn't work because we need to keep them in inserted order
         debug_assert!(
@@ -278,6 +303,18 @@ impl Ideas {
         );
         result
     }
+
+    /// Discards all ideas at or below the threshold and clears the votes of the remaining ideas
+    pub fn reset_with_threshold(&mut self) {
+        self.data.retain_mut(|idea| {
+            if idea.voters.len() > self.discard_threshold {
+                idea.voters.clear();
+                true
+            } else {
+                false
+            }
+        });
+    }
 }
 
 impl From<NonZeroUsize> for IdeaId {
@@ -291,8 +328,6 @@ impl Display for IdeaId {
         write!(f, "{}", self.0)
     }
 }
-
-impl Resettable for Ideas {}
 
 #[cfg(test)]
 mod tests {
@@ -317,50 +352,56 @@ mod tests {
         }
     }
 
-    impl From<Vec<Idea>> for Ideas {
-        fn from(data: Vec<Idea>) -> Self {
-            Self { data }
+    impl From<(Vec<Idea>, usize)> for Ideas {
+        fn from((data, discard_threshold): (Vec<Idea>, usize)) -> Self {
+            Self {
+                data,
+                discard_threshold,
+            }
         }
     }
 
-    impl From<Vec<(&str, Vec<u64>)>> for Ideas {
-        fn from(value: Vec<(&str, Vec<u64>)>) -> Self {
-            value
-                .into_iter()
-                .map(Into::into)
-                .collect::<Vec<Idea>>()
+    impl From<(Vec<(&str, Vec<u64>)>, usize)> for Ideas {
+        fn from((data, discard_threshold): (Vec<(&str, Vec<u64>)>, usize)) -> Self {
+            (
+                data.into_iter().map(Into::into).collect::<Vec<Idea>>(),
+                discard_threshold,
+            )
                 .into()
         }
     }
 
     #[test]
     fn empty_ideas() {
-        let ideas: Ideas = Default::default();
         for i in 0..10 {
+            let ideas = Ideas {
+                discard_threshold: i,
+                ..Default::default()
+            };
             assert!(ideas.leading().is_none());
-            assert!(ideas.above_threshold(i).is_empty());
+            assert!(ideas.above_threshold().is_empty());
         }
     }
 
     #[rstest]
-    #[case::single_point_over(vec![
+    #[case::single_point_over((vec![
             ("only", vec![1,2,3,4])
-        ].into(),
-        3, Some("only"), vec!["only"])]
-    #[case::single_point_under(vec![
+        ],3).into(),
+        Some("only"), vec!["only"])]
+    #[case::single_point_under((vec![
             ("only", vec![1,2,3,4])
-        ].into(),
-        4, Some("only"), vec![])]
-    #[case::only_one_over(vec![
+        ],4).into(),
+        Some("only"), vec![])]
+    #[case::only_one_over((vec![
             ("first", vec![1,2,3,4]),("second", vec![1,2,3])
-        ].into(),
-        3, Some("first"), vec!["first"])]
-    #[case::pair_equal(vec![
+        ],3).into(),
+        Some("first"), vec!["first"])]
+    #[case::pair_equal((vec![
             ("first", vec![1,2,3,4]),
             ("second", vec![1,2,3,4])
-        ].into(),
-        3, Some("first"), vec!["first", "second"])]
-    #[case::multiple_equal_(vec![
+        ],3).into(),
+        Some("first"), vec!["first", "second"])]
+    #[case::multiple_equal_((vec![
             ("1st", vec![1,2,3,4]),
             ("2nd", vec![1,2,3,4]),
             ("3rd", vec![1,2,3,4]),
@@ -370,18 +411,17 @@ mod tests {
             ("7th", vec![1,2,3]),
             ("8th", vec![]),
             ("9th", vec![1,2,3,4]),
-        ].into(),
-        3, Some("4th"), vec!["4th", "5th", "6th","1st","2nd","3rd","9th"])]
+        ],3).into(),
+        Some("4th"), vec!["4th", "5th", "6th","1st","2nd","3rd","9th"])]
     fn test_name(
         #[case] ideas: Ideas,
-        #[case] threshold: usize,
         #[case] expected_leading_desc: Option<&str>,
         #[case] expected_above_ideas_desc: Vec<&str>,
     ) {
         let actual_leading_desc = ideas.leading().map(|idea| &idea.1.description[..]);
 
         let actual_above_ideas_desc: Vec<&str> = ideas
-            .above_threshold(threshold)
+            .above_threshold()
             .iter()
             .map(|x| &x.description[..])
             .collect();

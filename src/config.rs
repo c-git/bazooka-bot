@@ -5,7 +5,7 @@ use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 
-use crate::{secrets::AccessSecrets as _, KeyName};
+use crate::KeyName;
 
 #[derive(Debug)]
 pub struct StartupConfig {
@@ -19,7 +19,6 @@ pub struct StartupConfig {
 pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
-
     pub persist: PersistInstance,
 }
 
@@ -55,7 +54,7 @@ impl SharedConfig {
         secret_store: &SecretStore,
         persist: PersistInstance,
     ) -> anyhow::Result<&'static Self> {
-        let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
+        let auth_role_id = KeyName::AuthRoleId.get_stored_non_secret_parse(secret_store)?;
         let result = Box::new(Self {
             start_instant: Instant::now(),
             auth_role_id,

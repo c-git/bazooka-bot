@@ -2,7 +2,10 @@
 
 use std::{fmt::Debug, num::NonZeroUsize};
 
-use poise::{serenity_prelude::CreateEmbed, CreateReply};
+use poise::{
+    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
+    CreateReply,
+};
 use tracing::{info, instrument};
 
 use crate::{
@@ -13,6 +16,7 @@ use crate::{
         unranked::ideas::{IdeaId, Ideas},
         user_serde::UserRecordSupport as _,
     },
+    Data,
 };
 
 #[poise::command(
@@ -76,7 +80,7 @@ pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     let old_idea = ctx
         .data()
         .unranked
-        .idea_remove(id, ctx.author_id_number())?;
+        .idea_remove(id, ctx.author_id_number(), false)?;
     display_ideas_with_msg(
         &ctx,
         format!(
@@ -133,25 +137,43 @@ pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Resu
 /// Sets ideas back to the default
 pub async fn reset(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    do_ideas_reset(&ctx).await?;
+    do_ideas_reset(ctx, ctx.channel_id(), ctx.data()).await?;
+    ctx.reply("Ideas reset completed").await?;
     tracing_handler_end()
 }
 
-#[instrument(skip(ctx))]
-pub async fn do_ideas_reset(ctx: &Context<'_>) -> anyhow::Result<()> {
+#[instrument(skip(cache_http))]
+pub async fn do_ideas_reset(
+    cache_http: impl CacheHttp,
+    channel_id: ChannelId,
+    data: &Data,
+) -> anyhow::Result<()> {
     info!("START");
-    ctx.say("Ideas before reset").await?;
-    display_ideas(ctx, true).await?;
-    ctx.data().unranked.ideas_reset()?;
-    display_ideas_with_msg(ctx, "---\nIdeas reset").await?;
+    channel_id.say(&cache_http, "Ideas before reset").await?;
+    display_ideas_channel(&cache_http, channel_id, data, true).await?;
+    data.unranked.ideas_reset()?;
+    display_ideas_channel(&cache_http, channel_id, data, true).await?;
     tracing_handler_end()
 }
 
 #[instrument(skip(ctx))]
 pub async fn display_ideas(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<()> {
     info!("START");
-    let builder = display_generate(ctx, is_verbose).await?;
+    let builder = display_generate_reply(ctx, is_verbose).await?;
     ctx.send(builder).await?;
+    tracing_handler_end()
+}
+
+#[instrument(skip(cache_http))]
+pub async fn display_ideas_channel(
+    cache_http: impl CacheHttp,
+    channel_id: ChannelId,
+    data: &Data,
+    is_verbose: bool,
+) -> anyhow::Result<()> {
+    info!("START");
+    let builder = display_generate_message(&cache_http, data, is_verbose).await?;
+    channel_id.send_message(&cache_http, builder).await?;
     tracing_handler_end()
 }
 
@@ -161,17 +183,41 @@ pub async fn display_ideas_with_msg<S: Into<String> + Debug>(
     extra_msg: S,
 ) -> anyhow::Result<()> {
     info!("START");
-    let builder = display_generate(ctx, false).await?.content(extra_msg);
+    let builder = display_generate_reply(ctx, false).await?.content(extra_msg);
     ctx.send(builder).await?;
     tracing_handler_end()
 }
 
-async fn display_generate(ctx: &Context<'_>, is_verbose: bool) -> anyhow::Result<CreateReply> {
-    let ideas_as_string = ctx.data().unranked.ideas_as_string(ctx, is_verbose).await?;
+async fn display_generate_reply(
+    ctx: &Context<'_>,
+    is_verbose: bool,
+) -> anyhow::Result<CreateReply> {
+    let embed = display_generate_embed(ctx, ctx.data(), is_verbose).await?;
+    Ok(CreateReply::default().embed(embed))
+}
+
+async fn display_generate_message(
+    cache_http: impl CacheHttp,
+    data: &Data,
+    is_verbose: bool,
+) -> anyhow::Result<CreateMessage> {
+    let embed = display_generate_embed(cache_http, data, is_verbose).await?;
+    Ok(CreateMessage::new().embed(embed))
+}
+
+async fn display_generate_embed(
+    cache_http: impl CacheHttp,
+    data: &Data,
+    is_verbose: bool,
+) -> Result<CreateEmbed, anyhow::Error> {
+    let ideas_as_string = data
+        .unranked
+        .ideas_as_string(cache_http, is_verbose)
+        .await?;
     let embed = CreateEmbed::new()
         .title(Ideas::DISPLAY_TITLE)
         .description(ideas_as_string);
-    Ok(CreateReply::default().embed(embed))
+    Ok(embed)
 }
 
 #[instrument(skip(ctx))]

@@ -37,6 +37,10 @@ impl Data {
 
 pub(crate) trait PersistData {
     fn data_load_or_default<T: for<'a> serde::Deserialize<'a> + Default>(&self, key: &str) -> T;
+    fn data_load_or_migration<T, F>(&self, key: &str, f: F) -> T
+    where
+        T: for<'a> serde::Deserialize<'a>,
+        F: FnOnce(&str, &PersistInstance) -> T;
     fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()>;
 }
 
@@ -57,6 +61,23 @@ impl PersistData for PersistInstance {
             Err(e) => {
                 error!("failed to load '{key}' data. Error: {e}");
                 Default::default()
+            }
+        }
+    }
+
+    fn data_load_or_migration<T, F>(&self, key: &str, f: F) -> T
+    where
+        T: for<'a> serde::Deserialize<'a>,
+        F: FnOnce(&str, &PersistInstance) -> T,
+    {
+        match self.load::<T>(key) {
+            Ok(data) => {
+                info!("'{key}' data loaded successfully");
+                data
+            }
+            Err(e) => {
+                error!("failed to load '{key}' data. Going fall back to attempting migration. Error: {e}");
+                f(key, self)
             }
         }
     }

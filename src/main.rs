@@ -68,7 +68,9 @@ async fn main(
                 } else{
                     warn!("Not sending connection notification because {} not set", KeyName::ChannelBotStatus.as_ref());
                 }
-                Ok(Data::new(shared_config))
+                let data = Data::new(shared_config);
+                info!("END OF SETUP CLOSURE");
+                Ok(data)
             })
         })
         .build();

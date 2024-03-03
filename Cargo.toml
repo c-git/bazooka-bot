@@ -8,6 +8,7 @@ publish = false
 anyhow = "1.0.68"
 human-time = "0.1.6"
 poise = "0.6.1"
+secrecy = "0.8.0"
 serde = { version = "1.0.197", features = ["derive"] }
 shuttle-persist = "0.39.0"
 shuttle-runtime = "0.39.0"

@@ -2,12 +2,15 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::model::unranked::{ideas::Ideas, scores::Scores};
-
-use super::{PersistData, SharedConfig};
+use crate::{
+    config::SharedConfig,
+    model::{
+        unranked::{ideas::Ideas, scores::Scores},
+        PersistData as _,
+    },
+};
 
 pub mod ideas;
-
 pub mod scores;
 
 #[derive(Debug)]

@@ -1,10 +1,8 @@
-use std::collections::HashSet;
 use std::sync::Arc;
 
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, AccessSecrets as _, Data, SharedConfig};
+use bazooka_bot::{commands_list, AccessSecrets as _, Data, SharedConfig, StartupConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
-use poise::serenity_prelude::{GuildId, UserId};
 use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
@@ -16,26 +14,18 @@ async fn main(
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());
+
     // Load setup values
     let discord_token = secret_store.access_secret_string("DISCORD_TOKEN")?;
-    let guild_id: GuildId = secret_store.access_secret_parse("GUILD_ID")?;
+    let startup_config =
+        StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
     let shared_config =
         SharedConfig::try_new(&secret_store, persist).context("failed to created shared_config")?;
-    let owners: HashSet<UserId> = secret_store
-        .access_secret_string("OWNERS")?
-        .split(',')
-        .map(|x| {
-            x.parse::<u64>()
-                .context("failed to parse owner")
-                .map(UserId::new)
-        })
-        .collect::<anyhow::Result<HashSet<UserId>>>()?;
-    let is_production = std::env::var("SHUTTLE").is_ok();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: commands_list(),
-            owners,
+            owners: startup_config.owners,
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("bb".into()),
                 edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
@@ -48,7 +38,7 @@ async fn main(
         })
         .setup(move |ctx, ready, framework| {
             Box::pin(async move {
-                if is_production {
+                if startup_config.is_production {
                     info!("Production run detected going to register globally");
                     poise::builtins::register_globally(ctx, &framework.options().commands)
                         .await
@@ -58,7 +48,7 @@ async fn main(
                     poise::builtins::register_in_guild(
                         ctx,
                         &framework.options().commands,
-                        guild_id,
+                        startup_config.guild_id,
                     )
                     .await
                     .with_context(|| {

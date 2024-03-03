@@ -16,7 +16,7 @@ use shuttle_persist::PersistInstance;
 use shuttle_secrets::SecretStore;
 use tracing::{error, info};
 
-use crate::AccessSecrets as _;
+use crate::config::SharedConfig;
 
 use self::unranked::Unranked;
 
@@ -28,28 +28,6 @@ pub(crate) mod user_serde;
 pub struct Data {
     pub unranked: Unranked,
     pub shared_config: &'static SharedConfig,
-}
-
-#[derive(Debug)]
-pub struct SharedConfig {
-    pub start_instant: Instant,
-    pub auth_role_id: RoleId,
-    persist: PersistInstance,
-}
-
-impl SharedConfig {
-    pub fn try_new(
-        secret_store: &SecretStore,
-        persist: PersistInstance,
-    ) -> anyhow::Result<&'static Self> {
-        let auth_role_id = secret_store.access_secret_parse("AUTH_ROLE_ID")?;
-        let result = Box::new(Self {
-            start_instant: Instant::now(),
-            auth_role_id,
-            persist,
-        });
-        Ok(Box::leak(result))
-    }
 }
 
 impl Data {

@@ -5,7 +5,8 @@ use poise::serenity_prelude::CacheHttp;
 use tracing::{info, warn};
 
 use crate::{
-    model::{user_serde::UserIdNumber, PersistData as _, SharedConfig},
+    config::SharedConfig,
+    model::{user_serde::UserIdNumber, PersistData as _},
     Context, Resettable,
 };
 

@@ -171,6 +171,7 @@ dependencies = [
  "human-time",
  "poise",
  "rstest",
+ "secrecy",
  "serde",
  "shuttle-persist",
  "shuttle-runtime",

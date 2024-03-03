@@ -4,9 +4,10 @@ use anyhow::bail;
 use tracing::{error, info};
 
 use crate::{
+    config::SharedConfig,
     model::{
         user_serde::{UserIdNumber, UserName, UserRecord},
-        PersistData, SharedConfig,
+        PersistData as _,
     },
     RemoveElement as _, Resettable,
 };

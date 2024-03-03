@@ -81,7 +81,7 @@ pub async fn do_start_event(
     display_scores_channel(&cache_http, channel_id, data).await?;
 
     channel_id
-        .say(&cache_http, "Setup successfully completed GLHF")
+        .say(&cache_http, "@here Setup successfully completed GLHF")
         .await?;
 
     tracing_handler_end()

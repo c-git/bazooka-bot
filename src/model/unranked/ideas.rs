@@ -94,7 +94,12 @@ impl Idea {
 
 impl Display for Idea {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({} votes)", self.description, self.voters.len())
+        let votes = match self.voters.len() {
+            0 => "No votes".to_string(),
+            1 => "1 vote".to_string(),
+            x => format!("{x} votes"),
+        };
+        write!(f, "{} ({votes})", self.description)
     }
 }
 impl Display for Ideas {
@@ -162,7 +167,9 @@ impl Ideas {
                 if leading_index == i { "**" } else { "" }
             )?;
             if let Some(voters) = idea.voters_as_string(&cache_http).await? {
-                writeln!(result, "{voters}")?;
+                writeln!(result, "Voters: {voters}")?;
+            } else {
+                writeln!(result, "[No voters]")?;
             }
             writeln!(result)?; // Add separating line
         }

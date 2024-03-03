@@ -68,7 +68,7 @@ impl KeyName {
             Ok(x) => Some(x),
             Err(e) => {
                 warn!(
-                    "failed to optionally load {}. Defaulting to use None instead. Error: {}",
+                    "failed to optionally load {}. Defaulting to use None instead. Error was: {}",
                     self.as_ref(),
                     e
                 );

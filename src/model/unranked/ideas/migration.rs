@@ -20,7 +20,7 @@ pub fn migrate_old_ideas(key: &str, persist: &PersistInstance) -> super::Ideas {
             }
         }
         Err(e) => {
-            warn!("Failed to load old version. Going to use default for new. Error: {e:?}");
+            warn!("Failed to load old version. Going to use default for new. Error was: {e:?}");
             Default::default()
         }
     };

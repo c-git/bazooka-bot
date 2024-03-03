@@ -59,7 +59,7 @@ impl PersistData for PersistInstance {
                 data
             }
             Err(e) => {
-                error!("failed to load '{key}' data. Error: {e}");
+                error!("failed to load '{key}' data. Error was: {e}");
                 Default::default()
             }
         }
@@ -76,7 +76,7 @@ impl PersistData for PersistInstance {
                 data
             }
             Err(e) => {
-                error!("failed to load '{key}' data. Going fall back to attempting migration. Error: {e}");
+                error!("failed to load '{key}' data. Going fall back to attempting migration. Error was: {e}");
                 f(key, self)
             }
         }

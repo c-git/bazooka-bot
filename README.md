@@ -35,19 +35,19 @@ Note: Some checked off items my not be complete only started but at the time of 
 At the start of unranked each season the following should happen.
 It should be scheduled manually each season by an officer.
 
-- [ ] Verify user is authorized
-- [ ] Print current info before clearing
-- [ ] Clear the scores for the last season
-- [ ] Determine the winning idea (Highest votes or lower ID if tied)
-- [ ] Set the new unranked message based on the winning idea (Should show with the scores so people know what the unranked is).
-- [ ] Clear the ideas. Keep any ideas with more than `idea_keep_threshold` votes except for the winning one.
-- [ ] Announce the new unranked challenge
+- [x] Verify user is authorized
+- [x] Print current info before clearing
+- [x] Clear the scores for the last season
+- [x] Determine the winning idea (Highest votes or lower ID if tied)
+- [x] Set the new unranked message based on the winning idea (Should show with the scores so people know what the unranked is).
+- [x] Clear the ideas. Discard any ideas less than or equal to `discard_threshold` votes plus the winning one.
+- [x] Announce the new unranked challenge
 
 # Nice to have
 
 - [ ] Add ability for owner to download the data files to facilitate testing before uploading a version
 - [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
-- [ ] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas
+- [x] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas
 - [ ] Add web page (with info and to wake up bot) https://docs.shuttle.rs/templates/tutorials/custom-service
 - [ ] Restrict unranked to that channel
 - [x] Send a status messages when it connects (including the version)

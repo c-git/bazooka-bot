@@ -12,7 +12,7 @@ use crate::{
 pub mod migration;
 pub(crate) mod protected_ops;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 /// If there are any Ideas above a threshold passed then it is guaranteed that the first one returned will also match the output of leading
 pub struct Ideas {
     data: Vec<Idea>,
@@ -129,6 +129,7 @@ impl IdeaId {
 impl Ideas {
     const DATA_KEY: &'static str = "ideas";
     pub const DISPLAY_TITLE: &'static str = "# Unranked Ideas";
+    const DEFAULT_DISCARD_THRESHOLD: usize = 2;
     pub fn add(&mut self, user_id_number: UserIdNumber, description: String) {
         let value = Idea::new(user_id_number, description);
         self.data.push(value);
@@ -326,6 +327,15 @@ impl From<NonZeroUsize> for IdeaId {
 impl Display for IdeaId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl Default for Ideas {
+    fn default() -> Self {
+        Self {
+            data: Default::default(),
+            discard_threshold: Self::DEFAULT_DISCARD_THRESHOLD,
+        }
     }
 }
 

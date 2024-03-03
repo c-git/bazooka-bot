@@ -16,6 +16,7 @@ pub struct StartupConfig {
 }
 
 #[derive(Debug)]
+/// Shares immutable data across various places in the application by each just having a pointer to a leaked instance of this struct
 pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,

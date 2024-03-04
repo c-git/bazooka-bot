@@ -32,12 +32,7 @@ pub async fn unranked(ctx: Context<'_>) -> anyhow::Result<()> {
     call_to_parent_command(ctx).await
 }
 
-#[poise::command(
-    hide_in_help,
-    prefix_command, // TODO 4: Remove prefix command after scheduling be comes possible
-    slash_command,
-    check = "is_auth"
-)]
+#[poise::command(hide_in_help, prefix_command, guild_only = true, check = "is_auth")]
 #[instrument(name = "unranked-start_event", skip(ctx))]
 /// Resets ideas and scores for the start of the new event and sets the message with the leading idea
 pub async fn start_event(ctx: Context<'_>) -> anyhow::Result<()> {

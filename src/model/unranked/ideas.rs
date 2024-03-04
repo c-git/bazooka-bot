@@ -1,4 +1,4 @@
-use std::{fmt::Display, num::NonZeroUsize};
+use std::fmt::Display;
 
 use anyhow::{bail, Context as _};
 use poise::serenity_prelude::CacheHttp;
@@ -6,11 +6,13 @@ use tracing::{info, warn};
 
 use crate::{
     config::SharedConfig,
-    model::{user_serde::UserIdNumber, PersistData as _},
+    model::{one_based_id::OneBasedId, user_serde::UserIdNumber, PersistData as _},
 };
 
 pub mod migration;
 pub(crate) mod protected_ops;
+
+pub type IdeaId = OneBasedId;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 /// If there are any Ideas above a threshold passed then it is guaranteed that the first one returned will also match the output of leading
@@ -26,13 +28,6 @@ pub struct Idea {
     pub description: String,
     voters: Vec<UserIdNumber>,
 }
-
-/// Stores an ID of an Idea. These are 1 based because that's
-/// how it gets displayed because of markdown
-#[derive(
-    Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy,
-)]
-pub struct IdeaId(NonZeroUsize);
 
 impl Idea {
     fn new(creator: UserIdNumber, description: String) -> Idea {
@@ -117,17 +112,6 @@ impl Display for Ideas {
             }
         }
         Ok(())
-    }
-}
-
-impl IdeaId {
-    fn as_index(&self) -> usize {
-        let x: usize = self.0.into();
-        x - 1 // Convert back down to 0 based
-    }
-    fn from_index(value: usize) -> Self {
-        let x = NonZeroUsize::new(value + 1).expect("any usize plus 1 must be non-zero");
-        Self(x)
     }
 }
 
@@ -326,18 +310,6 @@ impl Ideas {
                 false
             }
         });
-    }
-}
-
-impl From<NonZeroUsize> for IdeaId {
-    fn from(value: NonZeroUsize) -> Self {
-        Self(value)
-    }
-}
-
-impl Display for IdeaId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
     }
 }
 

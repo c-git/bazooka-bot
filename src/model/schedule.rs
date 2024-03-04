@@ -96,7 +96,7 @@ impl ScheduledTask {
     /// Spawns a new task and saves the join handle
     /// Previous task should already be aborted and cleared
     /// as any currently stored handle will be lost
-    #[instrument(skip(self, data) fields(self.objective = %self.objective, self.desired_execution_timestamp = %self.desired_execution_timestamp))]
+    #[instrument(skip(self, data) fields(self.objective = %self.objective, self.desired_execution_timestamp = ?self.desired_execution_timestamp))]
     fn do_spawn(&mut self, data: Data) -> anyhow::Result<()> {
         let objective = self.objective;
         debug_assert!(

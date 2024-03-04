@@ -132,7 +132,7 @@ pub async fn unvote_all(ctx: Context<'_>) -> anyhow::Result<()> {
 
 #[poise::command(prefix_command, slash_command, track_edits, aliases("disp"))]
 #[instrument(name = "unranked-idea-unvote_all", skip(ctx))]
-/// Displays all ideas optionally verbosely
+/// Displays all ideas optionally verbosely [aliases("disp")]
 pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     display_ideas(&ctx, is_verbose).await

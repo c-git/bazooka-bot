@@ -19,8 +19,8 @@ pub enum KeyName {
     /// Comma separated list of owner IDs
     Owners,
 
-    // /// The channel to be used for unranked (Indented to be used to restrict messages for unranked to that channel)
-    // ChannelUnrankedId,
+    /// The channel to be used for unranked (Indented to be used to restrict messages for unranked to that channel)
+    ChannelUnrankedId,
 
     // /// The channel to send messages to the internal group like when ppl leave the server for example
     // ChannelAdminId,
@@ -36,7 +36,7 @@ impl AsRef<str> for KeyName {
             KeyName::RegistrationGuildId => "REGISTRATION_GUILD_ID",
             KeyName::AuthRoleId => "AUTH_ROLE_ID",
             KeyName::Owners => "OWNERS",
-            // KeyName::ChannelUnrankedId => "CHANNEL_UNRANKED_ID",
+            KeyName::ChannelUnrankedId => "CHANNEL_UNRANKED_ID",
             // KeyName::ChannelAdminId => "CHANNEL_ADMIN_ID",
             KeyName::ChannelBotStatus => "CHANNEL_BOT_STATUS_ID",
         }

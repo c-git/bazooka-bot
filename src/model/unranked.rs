@@ -13,7 +13,6 @@ use crate::{
 pub mod ideas;
 pub mod scores;
 
-#[derive(Debug)]
 pub struct Unranked {
     ideas: Arc<Mutex<Ideas>>,
     scores: Arc<Mutex<Scores>>,

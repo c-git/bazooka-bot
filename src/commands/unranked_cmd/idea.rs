@@ -50,6 +50,7 @@ pub async fn add(ctx: Context<'_>, #[rest] description: String) -> anyhow::Resul
     tracing_handler_start(&ctx).await;
     let description = sanitize_markdown(description);
     ctx.data()
+        .inner
         .unranked
         .idea_add(ctx.author_id_number(), description)?;
     display_ideas_with_msg(&ctx, "Idea added").await?;
@@ -68,6 +69,7 @@ pub async fn edit(
     let new_description = sanitize_markdown(new_description);
     let id: IdeaId = id.into();
     ctx.data()
+        .inner
         .unranked
         .idea_edit(id, ctx.author_id_number(), new_description)?;
     display_ideas_with_msg(&ctx, "Idea Updated").await?;
@@ -82,6 +84,7 @@ pub async fn remove(ctx: Context<'_>, id: NonZeroUsize) -> anyhow::Result<()> {
     let id: IdeaId = id.into();
     let old_idea = ctx
         .data()
+        .inner
         .unranked
         .idea_remove(id, ctx.author_id_number(), false)?;
     display_ideas_with_msg(
@@ -147,7 +150,7 @@ pub async fn display(ctx: Context<'_>, #[flag] is_verbose: bool) -> anyhow::Resu
 /// Ideas with this many votes or less will be removed
 pub async fn threshold(ctx: Context<'_>, threshold: usize) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    ctx.data().unranked.idea_set_threshold(threshold)?;
+    ctx.data().inner.unranked.idea_set_threshold(threshold)?;
     display_ideas_with_msg(&ctx, format!("Threshold set to {threshold}")).await?;
     tracing_handler_end()
 }
@@ -171,7 +174,7 @@ pub async fn do_ideas_reset(
     info!("START");
     channel_id.say(&cache_http, "Ideas before reset").await?;
     display_ideas_channel(&cache_http, channel_id, data, true).await?;
-    data.unranked.ideas_reset()?;
+    data.inner.unranked.ideas_reset()?;
     display_ideas_channel(&cache_http, channel_id, data, true).await?;
     tracing_handler_end()
 }
@@ -231,6 +234,7 @@ async fn display_generate_embed(
     is_verbose: bool,
 ) -> Result<CreateEmbed, anyhow::Error> {
     let ideas_as_string = data
+        .inner
         .unranked
         .ideas_as_string(cache_http, is_verbose)
         .await?;
@@ -245,6 +249,7 @@ async fn change_vote(ctx: Context<'_>, id: IdeaId, is_add_vote: bool) -> anyhow:
     info!("START");
     let was_change_made =
         ctx.data()
+            .inner
             .unranked
             .idea_change_vote(id, ctx.author_id_number(), is_add_vote)?;
     display_ideas_with_msg(
@@ -264,6 +269,7 @@ async fn change_vote_all(ctx: Context<'_>, is_add_vote: bool) -> anyhow::Result<
     info!("START");
     let change_count = ctx
         .data()
+        .inner
         .unranked
         .idea_change_vote_all(ctx.author_id_number(), is_add_vote)?;
     display_ideas_with_msg(

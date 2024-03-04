@@ -12,7 +12,6 @@ pub struct StartupConfig {
     pub registration_guild_id: Option<GuildId>,
     pub owners: HashSet<UserId>,
     pub is_production: bool,
-    pub channel_bot_status: Option<ChannelId>,
 }
 
 #[derive(Debug)]
@@ -20,7 +19,9 @@ pub struct StartupConfig {
 pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
+    pub channel_unranked: ChannelId,
     pub persist: PersistInstance,
+    pub channel_bot_status: Option<ChannelId>,
 }
 
 impl StartupConfig {
@@ -38,13 +39,11 @@ impl StartupConfig {
             .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
         let is_production = std::env::var("SHUTTLE").is_ok();
-        let channel_bot_status = KeyName::ChannelBotStatus.get_non_secret_parse_opt(secret_store);
 
         Ok(Self {
             registration_guild_id: guild_id,
             owners,
             is_production,
-            channel_bot_status,
         })
     }
 }
@@ -55,10 +54,14 @@ impl SharedConfig {
         persist: PersistInstance,
     ) -> anyhow::Result<&'static Self> {
         let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
+        let channel_unranked = KeyName::ChannelUnrankedId.get_non_secret_parse(secret_store)?;
+        let channel_bot_status = KeyName::ChannelBotStatus.get_non_secret_parse_opt(secret_store);
         let result = Box::new(Self {
             start_instant: Instant::now(),
             auth_role_id,
+            channel_unranked,
             persist,
+            channel_bot_status,
         });
         Ok(Box::leak(result))
     }

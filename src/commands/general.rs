@@ -38,6 +38,7 @@ pub async fn uptime(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     ctx.say(
         ctx.data()
+            .inner
             .shared_config
             .start_instant
             .elapsed()

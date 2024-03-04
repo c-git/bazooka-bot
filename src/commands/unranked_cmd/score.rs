@@ -34,6 +34,7 @@ pub async fn remove(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     let did_remove = ctx
         .data()
+        .inner
         .unranked
         .score_remove(&ctx.author_to_user_record().await)?;
     display_scores_with_msg(
@@ -79,6 +80,7 @@ pub async fn message(ctx: Context<'_>, #[rest] msg: Option<String>) -> anyhow::R
     let is_cleared = msg.is_none();
     let msg = sanitize_markdown(msg.unwrap_or_default());
     ctx.data()
+        .inner
         .unranked
         .scores_message(ctx.author_id_number(), msg)?;
     display_scores_with_msg(
@@ -112,13 +114,14 @@ pub async fn do_scores_reset(
     info!("START");
     channel_id.say(&cache_http, "Scores before reset").await?;
     display_scores_channel(&cache_http, channel_id, data).await?;
-    data.unranked.scores_reset()?;
+    data.inner.unranked.scores_reset()?;
     tracing_handler_end()
 }
 
 async fn do_set_score(ctx: Context<'_>, score: ScoreValue) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     ctx.data()
+        .inner
         .unranked
         .score_set(ctx.author_to_user_record().await, score)?;
     display_scores_with_msg(&ctx, "Score set").await?;
@@ -170,7 +173,7 @@ fn display_generate_message(data: &Data) -> anyhow::Result<CreateMessage> {
 #[instrument(skip(data))]
 fn display_generate_embed(data: &Data) -> anyhow::Result<CreateEmbed> {
     info!("START");
-    let scores_as_string = data.unranked.scores_as_string()?;
+    let scores_as_string = data.inner.unranked.scores_as_string()?;
     let embed = CreateEmbed::new()
         .title(Scores::DISPLAY_TITLE)
         .description(scores_as_string);

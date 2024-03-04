@@ -8,30 +8,52 @@
 //! functions that need to take the lock on the mutex inside of modules called
 //! `protected_ops`` with the rule that they may not call any other functions in the same module
 
+use std::sync::{Arc, Mutex};
+
 use anyhow::Context as _;
 use shuttle_persist::PersistInstance;
 use tracing::{error, info};
 
 use crate::config::SharedConfig;
 
-use self::unranked::Unranked;
+use self::{schedule::ScheduledTasks, unranked::Unranked};
 
-pub(crate) mod unranked;
-pub(crate) mod user_serde;
+pub mod schedule;
+pub mod unranked;
+pub mod user_serde;
 
-// #[derive(Debug)]
-/// User data, which is stored and accessible in all command invocations
+/// User data, which is stored and accessible in all command invocations, cheap to clone uses an Arc
+#[derive(Clone)]
 pub struct Data {
+    pub inner: Arc<DataInner>,
+}
+
+pub struct DataInner {
     pub unranked: Unranked,
+    pub ctx: poise::serenity_prelude::Context,
+    pub schedule_tasks: Arc<Mutex<ScheduledTasks>>,
     pub shared_config: &'static SharedConfig,
 }
 
 impl Data {
-    pub fn new(shared_config: &'static SharedConfig) -> Self {
-        Data {
-            unranked: Unranked::new(shared_config),
-            shared_config,
-        }
+    pub fn new(
+        shared_config: &'static SharedConfig,
+        ctx: poise::serenity_prelude::Context,
+    ) -> Self {
+        let result = Data {
+            inner: Arc::new(DataInner {
+                unranked: Unranked::new(shared_config),
+                shared_config,
+                schedule_tasks: Arc::new(Mutex::new(ScheduledTasks::new(shared_config))),
+                ctx,
+            }),
+        };
+        result.schedule_hydrate();
+        result
+    }
+
+    fn save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
+        self.inner.shared_config.persist.data_save(key, value)
     }
 }
 

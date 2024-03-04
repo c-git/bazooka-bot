@@ -12,7 +12,7 @@ use crate::{
 pub mod migration;
 pub(crate) mod protected_ops;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 /// If there are any Ideas above a threshold passed then it is guaranteed that the first one returned will also match the output of leading
 pub struct Ideas {
     data: Vec<Idea>,

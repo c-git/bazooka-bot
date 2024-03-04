@@ -64,12 +64,12 @@ async fn main(
                 }
                 let connect_msg = format!("{} is connected! Version: {}", ready.user.name, version!());
                 info!("{connect_msg}");
-                if let Some(channel) = startup_config.channel_bot_status{
+                if let Some(channel) = shared_config.channel_bot_status{
                     channel.say(ctx, connect_msg).await?;
                 } else{
                     warn!("Not sending connection notification because channel_bot_status not set");
                 }
-                let data = Data::new(shared_config);
+                let data = Data::new(shared_config, ctx.clone());
                 info!("END OF SETUP CLOSURE");
                 Ok(data)
             })

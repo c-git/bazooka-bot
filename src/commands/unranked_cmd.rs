@@ -12,6 +12,7 @@ use crate::{
             score::{display_scores_channel, do_scores_reset},
         },
     },
+    model::schedule::{Objective, OutcomeCreateScheduledTask, UnixTimestamp},
     Context, Data,
 };
 
@@ -62,7 +63,7 @@ pub async fn do_start_event(
         .await?;
 
     // Get the leading idea (winning at this point as it's the end) and the ones above the threshold
-    let leading = data.unranked.ideas_pop_leading()?;
+    let leading = data.inner.unranked.ideas_pop_leading()?;
     channel_id
         .say(&cache_http, "Extracting leading idea")
         .await?;
@@ -79,7 +80,9 @@ pub async fn do_start_event(
     };
 
     // Set message for new scores
-    data.unranked.scores_message(Default::default(), msg)?;
+    data.inner
+        .unranked
+        .scores_message(Default::default(), msg)?;
 
     display_scores_channel(&cache_http, channel_id, data).await?;
 
@@ -106,7 +109,16 @@ pub async fn schedule_start_event(
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     if let Some(unix_timestamp) = unix_timestamp {
-        ctx.say(format!("<t:{0}:F> {0}", unix_timestamp)).await?;
+        let timestamp = UnixTimestamp::new(unix_timestamp);
+        let outcome = ctx
+            .data()
+            .schedule_create_task(Objective::UnrankedStartEvent, timestamp)?;
+        let mut msg = format!("Unranked Event Start Scheduled for {timestamp}");
+        if let OutcomeCreateScheduledTask::Replaced(prev) = outcome {
+            use std::fmt::Write as _;
+            write!(msg, "\nCancelled previous schedule for {prev}")?;
+        }
+        ctx.reply(msg).await?;
     } else {
         info!("Info given, command not executed");
         ctx.reply(

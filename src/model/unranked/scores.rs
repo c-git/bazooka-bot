@@ -20,7 +20,7 @@ type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
 /// Users scores
 ///
 /// Assumes that each user has at most one record
-#[derive(Debug, serde::Serialize, serde::Deserialize, Default)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct Scores {
     pub message: String,
     records: Vec<ScoreRecord>,

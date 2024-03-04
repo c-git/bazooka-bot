@@ -12,7 +12,6 @@ use crate::{
             score::{display_scores_channel, do_scores_reset},
         },
     },
-    model::schedule::{Objective, OutcomeCreateScheduledTask, UnixTimestamp},
     Context, Data,
 };
 
@@ -25,7 +24,7 @@ mod score;
     track_edits,
     aliases("ur"),
     subcommand_required,
-    subcommands("idea", "score", "start_event", "schedule_start_event")
+    subcommands("idea", "score", "start_event")
 )]
 #[instrument(name = "unranked", skip(ctx))]
 /// Commands related to the Unranked Challenge [aliases("ur")]
@@ -90,44 +89,5 @@ pub async fn do_start_event(
         .say(&cache_http, "@here Setup successfully completed GLHF")
         .await?;
 
-    tracing_handler_end()
-}
-
-#[poise::command(
-    hide_in_help,
-    prefix_command,
-    slash_command,
-    track_edits,
-    check = "is_auth"
-)]
-#[instrument(name = "unranked-schedule_start_event", skip(ctx))]
-/// Sets when the next unranked is expected to start
-pub async fn schedule_start_event(
-    ctx: Context<'_>,
-    #[description = "A unix timestamp. If you need more info just leave out argument for more info to be returned"]
-    unix_timestamp: Option<i32>,
-) -> anyhow::Result<()> {
-    tracing_handler_start(&ctx).await;
-    if let Some(unix_timestamp) = unix_timestamp {
-        let timestamp = UnixTimestamp::new(unix_timestamp);
-        let outcome = ctx
-            .data()
-            .schedule_create_task(Objective::UnrankedStartEvent, timestamp)?;
-        let mut msg = format!("Unranked Event Start Scheduled for {timestamp}");
-        if let OutcomeCreateScheduledTask::Replaced(prev) = outcome {
-            use std::fmt::Write as _;
-            write!(msg, "\nCancelled previous schedule for {prev}")?;
-        }
-        ctx.reply(msg).await?;
-    } else {
-        info!("Info given, command not executed");
-        ctx.reply(
-            "This command expects a unix timestamp.
-For help with generating a timestamp see <https://c-git.github.io/misc/discord/>
-you can test your timestamp by pasting the string given on the site in discord.
-Note: the command expects **ONLY** the number part",
-        )
-        .await?;
-    }
     tracing_handler_end()
 }

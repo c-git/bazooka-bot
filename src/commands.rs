@@ -6,12 +6,14 @@ use tracing::{error, info, instrument, warn};
 use crate::{
     commands::{
         general::{help, ping, register, uptime},
+        schedule::schedule,
         unranked_cmd::unranked,
     },
     AuthorPreferredDisplay as _, Context, Data,
 };
 
 mod general;
+mod schedule;
 mod unranked_cmd;
 
 /// Common info added to tracing for functions
@@ -46,6 +48,7 @@ pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
         general::version(),
         uptime(),
         unranked(),
+        schedule(),
         register(),
     ]
 }

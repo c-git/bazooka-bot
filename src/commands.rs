@@ -4,17 +4,15 @@ use poise::serenity_prelude::Mentionable;
 use tracing::{error, info, instrument, warn};
 
 use crate::{
-    commands::general::{register, uptime},
+    commands::{
+        general::{help, ping, register, uptime},
+        unranked_cmd::unranked,
+    },
     AuthorPreferredDisplay as _, Context, Data,
 };
 
 mod general;
 mod unranked_cmd;
-
-pub use self::{
-    general::{help, ping},
-    unranked_cmd::unranked,
-};
 
 /// Common info added to tracing for functions
 async fn tracing_handler_start(ctx: &Context<'_>) {

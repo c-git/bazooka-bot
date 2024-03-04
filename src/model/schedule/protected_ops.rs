@@ -1,7 +1,7 @@
 use std::sync::MutexGuard;
 
 use anyhow::Context;
-use tracing::{error, instrument};
+use tracing::{error, info, instrument};
 
 use crate::Data;
 
@@ -31,16 +31,30 @@ impl Data {
         desired_execution_timestamp: UnixTimestamp,
     ) -> anyhow::Result<OutcomeCreateScheduledTask> {
         let mut guard = self.guard_schedule()?;
-        let result = guard.create_task(objective, desired_execution_timestamp, self.clone());
+        let result = guard.create_task(objective, desired_execution_timestamp, self.clone())?;
         self.save_scheduled_tasks(&guard)?;
         Ok(result)
     }
 
     #[instrument(skip(self))]
-    pub fn schedule_cancel_task(&self, id: ScheduledTaskId) -> anyhow::Result<ScheduledTask> {
+    pub fn schedule_cancel_task_by_id(&self, id: ScheduledTaskId) -> anyhow::Result<ScheduledTask> {
+        info!("START");
         let mut guard = self.guard_schedule()?;
-        let result = guard.cancel_task(id)?;
+        let result = guard.cancel_task_by_id(id)?;
         self.save_scheduled_tasks(&guard)?;
+        info!("END");
+        Ok(result)
+    }
+    #[instrument(skip(self))]
+    pub fn schedule_cancel_task_by_objective(
+        &self,
+        objective: Objective,
+    ) -> anyhow::Result<ScheduledTask> {
+        info!("START");
+        let mut guard = self.guard_schedule()?;
+        let result = guard.cancel_task_by_objective(objective)?;
+        self.save_scheduled_tasks(&guard)?;
+        info!("END");
         Ok(result)
     }
 

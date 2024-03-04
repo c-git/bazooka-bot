@@ -11,7 +11,7 @@ use crate::{
     },
     AuthorPreferredDisplay as _, Context, Data,
 };
-
+pub(crate) use unranked_cmd::do_start_event;
 mod general;
 mod schedule;
 mod unranked_cmd;

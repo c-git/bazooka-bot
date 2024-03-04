@@ -96,7 +96,7 @@ pub async fn cancel(
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     let id: ScheduledTaskId = id.into();
-    let scheduled_task = ctx.data().schedule_cancel_task(id)?;
+    let scheduled_task = ctx.data().schedule_cancel_task_by_id(id)?;
     ctx.reply(format!(
         "{} cancelled for {}",
         scheduled_task.objective, scheduled_task.desired_execution_timestamp

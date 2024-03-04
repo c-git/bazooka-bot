@@ -32,6 +32,7 @@ pub struct ScheduledTasks {
 }
 
 impl ScheduledTasks {
+    pub const DISPLAY_TITLE: &'static str = "Scheduled Tasks";
     pub(crate) fn new(shared_config: &crate::SharedConfig) -> Self {
         shared_config.persist.data_load_or_default(Self::DATA_KEY)
     }
@@ -174,5 +175,24 @@ impl Display for Objective {
                 Objective::UnrankedStartEvent => "UnrankedStartEvent",
             }
         )
+    }
+}
+
+impl Display for ScheduledTask {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Objective: {}, Scheduled for {}",
+            self.objective, self.desired_execution_timestamp
+        )
+    }
+}
+
+impl Display for ScheduledTasks {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (i, task) in self.data.iter().enumerate() {
+            writeln!(f, "{}. {}", i + 1, task)?;
+        }
+        Ok(())
     }
 }

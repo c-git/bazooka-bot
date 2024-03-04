@@ -48,4 +48,10 @@ impl Data {
         };
         guard.hydrate(self.clone());
     }
+
+    #[instrument(skip(self))]
+    pub fn schedule_as_string(&self) -> anyhow::Result<String> {
+        let guard = self.guard_schedule()?;
+        Ok(guard.to_string())
+    }
 }

@@ -1,10 +1,11 @@
 //! Groups the commands related to scheduling
 
+use poise::{serenity_prelude::CreateEmbed, CreateReply};
 use tracing::{info, instrument};
 
 use crate::{
     commands::{call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start},
-    model::schedule::{Objective, OutcomeCreateScheduledTask, UnixTimestamp},
+    model::schedule::{Objective, OutcomeCreateScheduledTask, ScheduledTasks, UnixTimestamp},
     Context,
 };
 
@@ -16,7 +17,7 @@ use crate::{
     subcommands("set_unranked", "display", "cancel")
 )]
 #[instrument(name = "schedule", skip(ctx))]
-/// Commands related to the scheduling
+/// Commands related to scheduling
 pub async fn schedule(ctx: Context<'_>) -> anyhow::Result<()> {
     call_to_parent_command(ctx).await
 }
@@ -66,8 +67,13 @@ Note: the command expects **ONLY** the number part",
 /// Shows the scheduled tasks [aliases("disp")]
 pub async fn display(ctx: Context<'_>) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    todo!();
-    // tracing_handler_end()
+    let tasks_as_string = ctx.data().schedule_as_string()?;
+    let embed = CreateEmbed::new()
+        .title(ScheduledTasks::DISPLAY_TITLE)
+        .description(tasks_as_string);
+    let builder = CreateReply::default().embed(embed);
+    ctx.send(builder).await?;
+    tracing_handler_end()
 }
 
 #[poise::command(

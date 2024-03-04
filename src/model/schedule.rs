@@ -1,13 +1,16 @@
 use std::fmt::Display;
 
+use anyhow::bail;
 use tokio::task::JoinHandle;
 use tracing::{info, instrument};
 
 use crate::Data;
 
-use super::PersistData as _;
+use super::{one_based_id::OneBasedId, PersistData as _};
 
 pub(crate) mod protected_ops;
+
+pub type ScheduledTaskId = OneBasedId;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
 pub struct UnixTimestamp(i32);
@@ -52,8 +55,8 @@ pub enum OutcomeCreateScheduledTask {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ScheduledTask {
-    desired_execution_timestamp: UnixTimestamp,
-    objective: Objective,
+    pub desired_execution_timestamp: UnixTimestamp,
+    pub objective: Objective,
     #[serde(skip)]
     task: Option<JoinHandle<()>>,
 }
@@ -163,6 +166,15 @@ impl ScheduledTasks {
             self.data[i].spawn_task(data.clone());
         }
         info!("END");
+    }
+
+    pub fn cancel_task(&mut self, id: ScheduledTaskId) -> anyhow::Result<ScheduledTask> {
+        let index = id.as_index();
+        if index < self.data.len() {
+            Ok(self.data.remove(index))
+        } else {
+            bail!("Invalid ID received for cancel of {id}");
+        }
     }
 }
 

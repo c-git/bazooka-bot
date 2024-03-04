@@ -5,7 +5,10 @@ use tracing::{error, instrument};
 
 use crate::Data;
 
-use super::{Objective, OutcomeCreateScheduledTask, ScheduledTasks, UnixTimestamp};
+use super::{
+    Objective, OutcomeCreateScheduledTask, ScheduledTask, ScheduledTaskId, ScheduledTasks,
+    UnixTimestamp,
+};
 
 impl Data {
     /// Serves as the link to the private function that returns the guard
@@ -29,6 +32,14 @@ impl Data {
     ) -> anyhow::Result<OutcomeCreateScheduledTask> {
         let mut guard = self.guard_schedule()?;
         let result = guard.create_task(objective, desired_execution_timestamp, self.clone());
+        self.save_scheduled_tasks(&guard)?;
+        Ok(result)
+    }
+
+    #[instrument(skip(self))]
+    pub fn schedule_cancel_task(&self, id: ScheduledTaskId) -> anyhow::Result<ScheduledTask> {
+        let mut guard = self.guard_schedule()?;
+        let result = guard.cancel_task(id)?;
         self.save_scheduled_tasks(&guard)?;
         Ok(result)
     }

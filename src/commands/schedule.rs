@@ -1,11 +1,15 @@
 //! Groups the commands related to scheduling
 
+use std::num::NonZeroUsize;
+
 use poise::{serenity_prelude::CreateEmbed, CreateReply};
 use tracing::{info, instrument};
 
 use crate::{
     commands::{call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start},
-    model::schedule::{Objective, OutcomeCreateScheduledTask, ScheduledTasks, UnixTimestamp},
+    model::schedule::{
+        Objective, OutcomeCreateScheduledTask, ScheduledTaskId, ScheduledTasks, UnixTimestamp,
+    },
     Context,
 };
 
@@ -88,9 +92,15 @@ pub async fn display(ctx: Context<'_>) -> anyhow::Result<()> {
 /// Cancel a scheduled event
 pub async fn cancel(
     ctx: Context<'_>,
-    #[description = "See display to get valid values"] id: usize,
+    #[description = "See display to get valid values"] id: NonZeroUsize,
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
-    todo!();
-    // tracing_handler_end()
+    let id: ScheduledTaskId = id.into();
+    let scheduled_task = ctx.data().schedule_cancel_task(id)?;
+    ctx.reply(format!(
+        "{} cancelled for {}",
+        scheduled_task.objective, scheduled_task.desired_execution_timestamp
+    ))
+    .await?;
+    tracing_handler_end()
 }

@@ -47,6 +47,10 @@ It should be scheduled manually each season by an officer.
 
 - [ ] Add ability for owner to download the data files to facilitate testing before uploading a version
 - [ ] Setup deploy from CI - https://github.com/shuttle-hq/deploy-action
+- [ ] Setup test deployment on shuttle (idle time of about 15 minutes should be good)
+  - [ ] [Naming](https://docs.shuttle.rs/configuration/project-name)
+  - [ ] From release notes from 0.40.0
+    - Added a --secrets arg to the run and deploy commands that allows you to use a different secrets file than the default
 - [ ] Add message ID to the trace at ingress
 - [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
 - [x] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas

@@ -8,7 +8,7 @@ use crate::{
     commands::{
         call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start,
         unranked_cmd::{
-            idea::do_ideas_reset,
+            idea::{display_ideas_channel, do_ideas_reset},
             score::{display_scores_channel, do_scores_reset},
         },
     },
@@ -56,6 +56,8 @@ pub async fn do_start_event(
         )
         .await?;
 
+    display_ideas_channel(&cache_http, channel_id, data, true).await?;
+
     // Get the leading idea (winning at this point as it's the end) and the ones above the threshold
     let leading = data.inner.unranked.ideas_pop_leading()?;
     channel_id
@@ -76,9 +78,16 @@ pub async fn do_start_event(
     // Set message for new scores
     data.inner
         .unranked
-        .scores_message(Default::default(), msg)?;
+        .scores_message(Default::default(), msg.clone())?;
 
     display_scores_channel(&cache_http, channel_id, data).await?;
+
+    channel_id
+        .say(
+            &cache_http,
+            format!("@here This season we will be doing:\n---\n> {msg}\n---"),
+        )
+        .await?;
 
     channel_id
         .say(&cache_http, "@here Setup successfully completed GLHF")

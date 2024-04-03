@@ -3,7 +3,7 @@ use std::{collections::HashSet, time::Instant};
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
 use shuttle_persist::PersistInstance;
-use shuttle_secrets::SecretStore;
+use shuttle_runtime::SecretStore;
 
 use crate::secrets::KeyName;
 

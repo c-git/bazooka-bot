@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use anyhow::{bail, Context as _};
 use secrecy::{zeroize::DefaultIsZeroes, Secret, SecretString};
-use shuttle_secrets::SecretStore;
+use shuttle_runtime::SecretStore;
 use tracing::warn;
 
 pub enum KeyName {

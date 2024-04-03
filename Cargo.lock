@@ -173,7 +173,6 @@ dependencies = [
  "serde",
  "shuttle-persist",
  "shuttle-runtime",
- "shuttle-secrets",
  "shuttle-serenity",
  "tokio",
  "tracing",
@@ -1779,9 +1778,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-codegen"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84756b15f4f51a0edd060fe59203ce5d6b37796204a4d614135f266f97141d85"
+checksum = "2c7c1ea0dfd165fa64dd91bf4c67d1cf22e2f13c5edc4b64656b6015303aa82f"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -1791,9 +1790,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-common"
-version = "0.40.2"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4af50755ec20f317a5f6429385ead196a77c678fb5a726a9bae98ab1c8a600f6"
+checksum = "5367bffb2a9788af483024aaa3a7efc52f901516ef007eb82f739eb7ba609c5f"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1806,7 +1805,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "strum 0.25.0",
+ "strum 0.26.2",
  "tower",
  "tracing",
  "tracing-opentelemetry",
@@ -1818,9 +1817,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-persist"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f111e5ccd3c0e64377e7326c1356a5ce43504c4ecb1bc0cc7de1cc3e0a3ee32a"
+checksum = "46281679aef2567d041f3d46ae1ecdb99bb05b23d19522387c162849f62ea121"
 dependencies = [
  "async-trait",
  "bincode",
@@ -1831,9 +1830,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-proto"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a26c79d064d7b24fc12cb4035d3baecac99e16f28a384c7359c36253f3278bc4"
+checksum = "bdf359a9d0077e1526f02004b34a4ad605bd72855a5ce371a646096297043f2f"
 dependencies = [
  "futures-core",
  "prost",
@@ -1844,15 +1843,13 @@ dependencies = [
 
 [[package]]
 name = "shuttle-runtime"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a75e4df6264bcdf63c6b90180cd644a03e9b28fdb955b40cb650176dcc0ead0b"
+checksum = "163ea2e829b0448c8faaf10bba50c66d6280449beafcbdda3da3e69461d974d6"
 dependencies = [
  "anyhow",
  "async-trait",
- "chrono",
  "colored",
- "prost-types",
  "serde",
  "serde_json",
  "shuttle-codegen",
@@ -1860,7 +1857,6 @@ dependencies = [
  "shuttle-proto",
  "shuttle-service",
  "strfmt",
- "thiserror",
  "tokio",
  "tokio-stream",
  "tonic",
@@ -1868,21 +1864,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "shuttle-secrets"
-version = "0.40.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "486caa037d33e0b40cc664d52d0461c9bfbe56d5d344b7706bdd03c806b11d09"
-dependencies = [
- "async-trait",
- "serde_json",
- "shuttle-service",
-]
-
-[[package]]
 name = "shuttle-serenity"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d53ab712dddfb43c2bb89b027e0f2a1248cd3da361eb717f4c92bc539edfec11"
+checksum = "9319aadc77801dec9fa44d3b0f7f0b0b150c021770a1cd0151a0305d687dc561"
 dependencies = [
  "serenity",
  "shuttle-runtime",
@@ -1890,9 +1875,9 @@ dependencies = [
 
 [[package]]
 name = "shuttle-service"
-version = "0.40.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7ebd14ea503e12caaf1bb12587fe579fa1087a6a6b0c73c2c53331acb538c8c"
+checksum = "0c41b682b8639915d01f6b9b5bff76afc8b67d553b8199d0364bd4675397b06d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1998,11 +1983,11 @@ checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
 
 [[package]]
 name = "strum"
-version = "0.25.0"
+version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
+checksum = "5d8cec3501a5194c432b2b7976db6b7d10ec95c253208b45f83f7136aa985e29"
 dependencies = [
- "strum_macros 0.25.3",
+ "strum_macros 0.26.2",
 ]
 
 [[package]]
@@ -2020,9 +2005,9 @@ dependencies = [
 
 [[package]]
 name = "strum_macros"
-version = "0.25.3"
+version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23dc1fa9ac9c169a78ba62f0b841814b7abae11bdd047b9c58f893439e309ea0"
+checksum = "c6cf59daf282c0a494ba14fd21610a0325f9f90ec9d1231dea26bcb1d696c946"
 dependencies = [
  "heck",
  "proc-macro2",

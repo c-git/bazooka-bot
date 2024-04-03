@@ -5,14 +5,14 @@ use bazooka_bot::{commands_list, get_secret_discord_token, Data, SharedConfig, S
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
 use shuttle_persist::PersistInstance;
-use shuttle_secrets::SecretStore;
+use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::{error, info, warn};
 use version::version;
 
 #[shuttle_runtime::main]
 async fn main(
-    #[shuttle_secrets::Secrets] secret_store: SecretStore,
+    #[shuttle_runtime::Secrets] secret_store: SecretStore,
     #[shuttle_persist::Persist] persist: PersistInstance,
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());

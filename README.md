@@ -12,6 +12,12 @@ Note: Some checked off items my not be complete only started but at the time of 
 If they are not there will be TODO's in the code itself.
 The check off only denotes the start of the feature as then the TODOs are moved into the code and maintaining two places is not sustainable.
 
+# Alliance Management
+
+- [ ] Reminder to add new players to the internal channels
+- [ ] Send welcome message to new members of the server
+- [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
+
 # Unranked event
 
 - [x] `/unranked idea`
@@ -54,10 +60,9 @@ It should be scheduled manually each season by an officer.
   - [ ] From release notes from 0.40.0
     - Added a --secrets arg to the run and deploy commands that allows you to use a different secrets file than the default
 - [ ] Add message ID to the trace at ingress
-- [ ] Add event handler to see when ppl leave https://github.com/serenity-rs/poise/blob/current/examples/event_handler/main.rs
 - [x] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas
-- [ ] Add web page (with info and to wake up bot) https://docs.shuttle.rs/templates/tutorials/custom-service
-- [ ] Restrict unranked to that channel
+- [ ] Add web page (with info and to wake up bot, would help for test bot that would go to sleep) https://docs.shuttle.rs/templates/tutorials/custom-service
+- [ ] Restrict unranked commands to that channel
 - [x] Send a status messages when it connects (including the version)
 - [x] Change results (vote counts and leader board) to (embeds)[https://docs.rs/poise/latest/poise/serenity_prelude/struct.CreateMessage.html#examples]
 - [ ] Make reset a 2 stage process with a confirmation

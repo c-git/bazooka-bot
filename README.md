@@ -8,7 +8,9 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
 
 <!-- Leave completed items as a feature list / what is being considered for implementation -->
 
-Note: Some checked off items my not be complete only started but at the time of writing (2024-03-02) there is only one item like that, "schedule_start_unranked"
+Note: Some checked off items my not be complete only started but at the time of writing (2024-04-07) all are completed.
+If they are not there will be TODO's in the code itself.
+The check off only denotes the start of the feature as then the TODOs are moved into the code and maintaining two places is not sustainable.
 
 # Unranked event
 

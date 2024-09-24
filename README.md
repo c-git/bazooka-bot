@@ -10,7 +10,7 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
 
 Note: Some checked off items my not be complete only started but at the time of writing (2024-04-07) all are completed.
 If they are not there will be TODO's in the code itself.
-The check off only denotes the start of the feature as then the TODOs are moved into the code and maintaining two places is not sustainable.
+The check off only denotes the start of the feature as then the TODOs are moved into the code as maintaining two places is not sustainable.
 
 # Alliance Management
 

@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use anyhow::{bail, Context as _};
-use secrecy::{zeroize::DefaultIsZeroes, Secret, SecretString};
+use secrecy::{zeroize::DefaultIsZeroes, SecretBox, SecretString};
 use shuttle_runtime::SecretStore;
 use tracing::warn;
 
@@ -46,7 +46,7 @@ impl AsRef<str> for KeyName {
 impl KeyName {
     pub fn get_secret_string(&self, secret_store: &SecretStore) -> anyhow::Result<SecretString> {
         Ok(SecretString::new(
-            secret_store.access_secret_string(self.as_ref())?,
+            secret_store.access_secret_string(self.as_ref())?.into(),
         ))
     }
 
@@ -54,10 +54,9 @@ impl KeyName {
     pub fn get_secret_parse<F: FromStr + DefaultIsZeroes>(
         &self,
         secret_store: &SecretStore,
-    ) -> anyhow::Result<Secret<F>> {
-        Ok(Secret::new(
-            secret_store.access_secret_parse(self.as_ref())?,
-        ))
+    ) -> anyhow::Result<SecretBox<F>> {
+        let secret = secret_store.access_secret_parse::<F>(self.as_ref())?;
+        Ok(SecretBox::new(Box::new(secret)))
     }
 
     pub fn get_non_secret_string(&self, secret_store: &SecretStore) -> anyhow::Result<String> {

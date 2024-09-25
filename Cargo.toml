@@ -8,15 +8,15 @@ publish = false
 anyhow = "1.0.68"
 human-time = "0.1.6"
 poise = "0.6.1"
-secrecy = "0.8.0"
+secrecy = "0.10.2"
 serde = { version = "1.0.197", features = ["derive"] }
-shuttle-persist = "0.44.0"
-shuttle-runtime = "0.44.0"
+shuttle-persist = "0.47.0"
+shuttle-runtime = "0.47.0"
 # Since poise is a serenity command framework, it can run on Shuttle with shuttle-serenity
-shuttle-serenity = "0.44.0"
+shuttle-serenity = "0.47.0"
 tokio = "1.26.0"
 tracing = "0.1.37"
 version = "3.0.0"
 
 [dev-dependencies]
-rstest = "0.19.0"
+rstest = "0.22.0"

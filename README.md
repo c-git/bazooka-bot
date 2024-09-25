@@ -1,6 +1,6 @@
 # Bazooka Bot
 
-This is the source code for the bot for the [Bazooka Alliance Discord Server](http://discord.gg/uQVy7BH)
+Source code for the Discord bot of the [Bazooka Alliance Server](http://discord.gg/uQVy7BH) (Alliance for [Command and Conquer: Rivals](https://www.ea.com/en-ca/games/command-and-conquer/command-and-conquer-rivals) Game)
 
 This is the rust replacement for the bot [originally](https://github.com/fone-git/bazooka-bot) written in python.
 

@@ -5,17 +5,17 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = "1.0.68"
+anyhow = "1.0.95"
 human-time = "0.1.6"
 poise = "0.6.1"
-secrecy = "0.10.2"
-serde = { version = "1.0.197", features = ["derive"] }
+secrecy = "0.10.3"
+serde = { version = "1.0.217", features = ["derive"] }
 shuttle-runtime = "0.51.0"
 # Since poise is a serenity command framework, it can run on Shuttle with shuttle-serenity
 shuttle-serenity = "0.51.0"
-tokio = "1.26.0"
-tracing = "0.1.37"
+tokio = "1.43.0"
+tracing = "0.1.41"
 version = "3.0.0"
 
 [dev-dependencies]
-rstest = "0.22.0"
+rstest = "0.24.0"

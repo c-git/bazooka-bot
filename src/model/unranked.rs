@@ -15,9 +15,9 @@ pub struct Unranked {
     shared_config: &'static SharedConfig,
 }
 impl Unranked {
-    pub fn new(shared_config: &'static SharedConfig) -> Self {
-        let ideas = Arc::new(Mutex::new(Ideas::new(shared_config)));
-        let scores = Arc::new(Mutex::new(Scores::new(shared_config)));
+    pub async fn new(shared_config: &'static SharedConfig) -> Self {
+        let ideas = Arc::new(Mutex::new(Ideas::new(shared_config).await));
+        let scores = Arc::new(Mutex::new(Scores::new(shared_config).await));
         Self {
             ideas,
             scores,

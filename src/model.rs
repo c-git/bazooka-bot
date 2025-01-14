@@ -33,15 +33,15 @@ pub struct DataInner {
 }
 
 impl Data {
-    pub fn new(
+    pub async fn new(
         shared_config: &'static SharedConfig,
         ctx: poise::serenity_prelude::Context,
     ) -> Self {
         let result = Data {
             inner: Arc::new(DataInner {
-                unranked: Unranked::new(shared_config),
+                unranked: Unranked::new(shared_config).await,
                 shared_config,
-                schedule_tasks: Arc::new(Mutex::new(ScheduledTasks::new(shared_config))),
+                schedule_tasks: Arc::new(Mutex::new(ScheduledTasks::new(shared_config).await)),
                 ctx,
             }),
         };

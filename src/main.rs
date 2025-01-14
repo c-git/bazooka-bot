@@ -76,7 +76,7 @@ async fn main(
                 } else{
                     warn!("Not sending connection notification because channel_bot_status not set");
                 }
-                let data = Data::new(shared_config, ctx.clone());
+                let data = Data::new(shared_config, ctx.clone()).await;
                 info!("END OF SETUP CLOSURE");
                 Ok(data)
             })

@@ -36,8 +36,8 @@ pub struct ScheduledTasks {
 
 impl ScheduledTasks {
     pub const DISPLAY_TITLE: &'static str = "Scheduled Tasks";
-    pub fn new(shared_config: &crate::SharedConfig) -> Self {
-        shared_config.load_or_default_kv(Self::DATA_KEY)
+    pub async fn new(shared_config: &crate::SharedConfig) -> Self {
+        shared_config.load_or_default_kv(Self::DATA_KEY).await
     }
 }
 

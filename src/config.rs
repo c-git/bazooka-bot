@@ -103,41 +103,24 @@ impl SharedConfig {
         Ok(())
     }
 
-    pub fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(
+    pub async fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(
         &self,
-        key_as_slice: &str,
+        key: &str,
     ) -> T {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let pool = self.db_pool.clone();
-        let key = key_as_slice.to_string();
-        tokio::spawn(async move {
-            match sqlx::query!("SELECT content FROM kv_store where id = $1", key)
-                .fetch_optional(&pool)
-                .await
-            {
-                Ok(content) => {
-                    if let Err(content) = tx.send(content) {
-                        error!(
-                            "Failed to send content over channel after error for key: {key}. Content was: {content:?}"
-                        );
-                    };
-                }
-                Err(err_msg) => {
-                    error!(?err_msg, "Failed to get content for key: {key}");
-                    if tx.send(None).is_err() {
-                        error!("Failed to send None over channel after error for key: {key}");
-                    };
-                }
+        let record_opt = match sqlx::query!("SELECT content FROM kv_store where id = $1", key)
+            .fetch_optional(&self.db_pool)
+            .await
+        {
+            Ok(content) => content,
+            Err(err_msg) => {
+                error!(?err_msg, "Failed to get content for key: {key}");
+                None
             }
-        });
-        let record = match rx.blocking_recv() {
-            Ok(Some(record)) => record,
-            Ok(None) => {
-                info!("No content found in DB for key: {key_as_slice}");
-                return T::default();
-            }
-            Err(_) => {
-                error!("Seems the sender that was supposed to read from the DB panicked");
+        };
+        let record = match record_opt {
+            Some(record) => record,
+            None => {
+                info!("No content found in DB for key: {key}");
                 return T::default();
             }
         };

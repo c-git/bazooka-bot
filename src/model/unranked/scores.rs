@@ -163,8 +163,8 @@ impl Scores {
         self.message = msg;
     }
 
-    pub fn new(shared_config: &SharedConfig) -> Self {
-        shared_config.load_or_default_kv(Self::DATA_KEY)
+    pub async fn new(shared_config: &SharedConfig) -> Self {
+        shared_config.load_or_default_kv(Self::DATA_KEY).await
     }
 }
 

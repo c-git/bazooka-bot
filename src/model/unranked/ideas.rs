@@ -261,8 +261,8 @@ impl Ideas {
         )
     }
 
-    pub fn new(shared_config: &SharedConfig) -> Self {
-        shared_config.load_or_default_kv(Self::DATA_KEY)
+    pub async fn new(shared_config: &SharedConfig) -> Self {
+        shared_config.load_or_default_kv(Self::DATA_KEY).await
     }
 
     /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest

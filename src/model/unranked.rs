@@ -15,7 +15,7 @@ pub struct Unranked {
     shared_config: &'static SharedConfig,
 }
 impl Unranked {
-    pub(crate) fn new(shared_config: &'static SharedConfig) -> Self {
+    pub fn new(shared_config: &'static SharedConfig) -> Self {
         let ideas = Arc::new(Mutex::new(Ideas::new(shared_config)));
         let scores = Arc::new(Mutex::new(Scores::new(shared_config)));
         Self {

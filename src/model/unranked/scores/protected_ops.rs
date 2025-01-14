@@ -26,7 +26,7 @@ impl Unranked {
         self.save(Scores::DATA_KEY, data)
     }
 
-    pub(crate) fn score_set(&self, user: UserRecord, score: ScoreValue) -> anyhow::Result<()> {
+    pub fn score_set(&self, user: UserRecord, score: ScoreValue) -> anyhow::Result<()> {
         let mut guard = self.guard_scores()?;
         guard.set_score(user, score)?;
         self.save_scores(&guard)?;
@@ -34,32 +34,28 @@ impl Unranked {
     }
 
     /// Returns true iff score was removed
-    pub(crate) fn score_remove(&self, user: &UserRecord) -> anyhow::Result<bool> {
+    pub fn score_remove(&self, user: &UserRecord) -> anyhow::Result<bool> {
         let mut guard = self.guard_scores()?;
         let result = guard.remove_score(user)?;
         self.save_scores(&guard)?;
         Ok(result)
     }
 
-    pub(crate) fn scores_as_string(&self) -> anyhow::Result<String> {
+    pub fn scores_as_string(&self) -> anyhow::Result<String> {
         let mut guard = self.guard_scores()?;
         let result = guard.display()?;
         // Note that we do not save here because only thing that should change in scores is the cache which doesn't get saved anyway
         Ok(result)
     }
 
-    pub(crate) fn scores_message(
-        &self,
-        user_id_number: UserIdNumber,
-        msg: String,
-    ) -> anyhow::Result<()> {
+    pub fn scores_message(&self, user_id_number: UserIdNumber, msg: String) -> anyhow::Result<()> {
         let mut guard = self.guard_scores()?;
         guard.set_message(user_id_number, msg);
         self.save_scores(&guard)?;
         Ok(())
     }
 
-    pub(crate) fn scores_reset(&self) -> anyhow::Result<()> {
+    pub fn scores_reset(&self) -> anyhow::Result<()> {
         let mut guard = self.guard_scores()?;
         guard.reset();
         self.save_scores(&guard)?;

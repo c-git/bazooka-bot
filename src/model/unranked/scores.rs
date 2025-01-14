@@ -9,7 +9,7 @@ use crate::{
     RemoveElement as _, Resettable,
 };
 
-pub(crate) mod protected_ops;
+pub mod protected_ops;
 
 pub type ScoreValue = i8;
 type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
@@ -163,7 +163,7 @@ impl Scores {
         self.message = msg;
     }
 
-    pub(crate) fn new(shared_config: &SharedConfig) -> Self {
+    pub fn new(shared_config: &SharedConfig) -> Self {
         // shared_config.persist.data_load_or_default(Self::DATA_KEY)
         todo!("Load Scores")
     }

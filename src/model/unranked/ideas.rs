@@ -261,7 +261,7 @@ impl Ideas {
         )
     }
 
-    pub(crate) fn new(shared_config: &SharedConfig) -> Self {
+    pub fn new(shared_config: &SharedConfig) -> Self {
         // shared_config.persist.data_load_or_default(Self::DATA_KEY)
         // shared_config
         //     .persist

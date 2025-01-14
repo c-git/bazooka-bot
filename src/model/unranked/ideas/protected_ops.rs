@@ -20,7 +20,7 @@ impl Unranked {
         self.save(Ideas::DATA_KEY, data)
     }
 
-    pub(crate) fn idea_add(
+    pub fn idea_add(
         &self,
         user_id_number: UserIdNumber,
         description: String,
@@ -31,7 +31,7 @@ impl Unranked {
         Ok(())
     }
 
-    pub(crate) fn idea_edit(
+    pub fn idea_edit(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
@@ -44,7 +44,7 @@ impl Unranked {
     }
 
     /// Attempts to remove and return the Idea
-    pub(crate) fn idea_remove(
+    pub fn idea_remove(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
@@ -57,7 +57,7 @@ impl Unranked {
     }
 
     /// Returns true iff a change was made
-    pub(crate) fn idea_change_vote(
+    pub fn idea_change_vote(
         &self,
         id: IdeaId,
         user_id_number: UserIdNumber,
@@ -70,7 +70,7 @@ impl Unranked {
     }
 
     /// Returns the number of votes changed
-    pub(crate) fn idea_change_vote_all(
+    pub fn idea_change_vote_all(
         &self,
         user_id_number: UserIdNumber,
         is_add_vote: bool,
@@ -81,7 +81,7 @@ impl Unranked {
         Ok(result)
     }
 
-    pub(crate) async fn ideas_as_string(
+    pub async fn ideas_as_string(
         &self,
         cache_http: impl CacheHttp,
         is_verbose: bool,
@@ -96,14 +96,14 @@ impl Unranked {
         }
     }
 
-    pub(crate) fn ideas_reset(&self) -> anyhow::Result<()> {
+    pub fn ideas_reset(&self) -> anyhow::Result<()> {
         let mut guard = self.guard_idea()?;
         guard.reset_with_threshold();
         self.save_idea(&guard)?;
         Ok(())
     }
 
-    pub(crate) fn idea_set_threshold(&self, threshold: usize) -> anyhow::Result<()> {
+    pub fn idea_set_threshold(&self, threshold: usize) -> anyhow::Result<()> {
         let mut guard = self.guard_idea()?;
         guard.discard_threshold = threshold;
         self.save_idea(&guard)?;

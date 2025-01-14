@@ -202,7 +202,6 @@ dependencies = [
  "shuttle-serenity",
  "shuttle-shared-db",
  "sqlx",
- "tokio",
  "tracing",
  "version",
 ]

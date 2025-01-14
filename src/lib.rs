@@ -2,6 +2,13 @@
 //! It is split into two main parts. The parts that receive commands from discord [`commands`] and
 //! the part that handles the actual logic of what to do in the [`model`]
 
+#![warn(unused_crate_dependencies)]
+
+mod used_in_bin {
+    use shuttle_serenity as _;
+    use shuttle_shared_db as _;
+}
+
 use tracing::{info, instrument};
 
 pub use self::{

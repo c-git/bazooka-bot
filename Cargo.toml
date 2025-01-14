@@ -10,11 +10,16 @@ human-time = "0.1.6"
 poise = "0.6.1"
 secrecy = "0.10.3"
 serde = { version = "1.0.217", features = ["derive"] }
-shuttle-runtime = {version = "0.51.0", default-features = false}
+shuttle-runtime = { version = "0.51.0", default-features = false }
 shuttle-serenity = "0.51.0" # Since poise is a serenity command framework, it can run on Shuttle with shuttle-serenity
-shuttle-shared-db = { version = "0.51.0", default-features = false, features = ["sqlx", "postgres"] }
-sqlx = { version = "0.8.3", default-features = false, features = ["postgres", "runtime-tokio-rustls"] }
-tokio = "1.43.0"
+shuttle-shared-db = { version = "0.51.0", default-features = false, features = [
+    "sqlx",
+    "postgres",
+] }
+sqlx = { version = "0.8.3", default-features = false, features = [
+    "postgres",
+    "runtime-tokio-rustls",
+] }
 tracing = "0.1.41"
 version = "3.0.0"
 

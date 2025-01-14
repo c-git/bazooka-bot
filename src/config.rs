@@ -1,8 +1,9 @@
-use std::{collections::HashSet, time::Instant};
+use std::{collections::HashSet, fmt::Debug, time::Instant};
 
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
-use shuttle_runtime::SecretStore;
+use shuttle_runtime::{tokio, SecretStore};
+use tracing::{error, info};
 
 use crate::secrets::KeyName;
 
@@ -64,14 +65,89 @@ impl SharedConfig {
         });
         Ok(Box::leak(result))
     }
-    #[allow(unused_variables)]
+
     /// Doesn't actually perform the save but spawns a task to do it in the background
     pub fn save_kv<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        todo!("spawn task to save")
+        let pool = self.db_pool.clone();
+        let key = key.to_string();
+        let value = serde_json::to_string(value).context("failed to convert to json")?;
+        tokio::spawn(async move {
+            let query = sqlx::query!(
+                "\
+                INSERT INTO kv_store (id, content)
+                VALUES ($1, $2)
+                ON CONFLICT(id)
+                DO UPDATE SET
+                content = EXCLUDED.content;",
+                key,
+                value
+            );
+            match query.execute(&pool).await {
+                Ok(query_result) => {
+                    if query_result.rows_affected() == 1 {
+                        info!("Save completed for key: {key}");
+                    } else {
+                        error!(
+                            ?key,
+                            "Expected 1 row to be affected by save but got: {}",
+                            query_result.rows_affected()
+                        )
+                    }
+                }
+                Err(err_msg) => error!(
+                    ?err_msg,
+                    "Failed to save content for key: {key} to kv store"
+                ),
+            }
+        });
+        Ok(())
     }
 
-    #[allow(unused_variables)]
-    pub fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(&self, key: &str) -> T {
-        todo!("Load value, block on task")
+    #[tokio::main] // to block on future
+    pub async fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(
+        &self,
+        key_as_slice: &str,
+    ) -> T {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let pool = self.db_pool.clone();
+        let key = key_as_slice.to_string();
+        tokio::spawn(async move {
+            match sqlx::query!("SELECT content FROM kv_store where id = $1", key)
+                .fetch_optional(&pool)
+                .await
+            {
+                Ok(content) => {
+                    if let Err(content) = tx.send(content) {
+                        error!(
+                            "Failed to send content over channel after error for key: {key}. Content was: {content:?}"
+                        );
+                    };
+                }
+                Err(err_msg) => {
+                    error!(?err_msg, "Failed to get content for key: {key}");
+                    if tx.send(None).is_err() {
+                        error!("Failed to send None over channel after error for key: {key}");
+                    };
+                }
+            }
+        });
+        let record = match rx.blocking_recv() {
+            Ok(Some(record)) => record,
+            Ok(None) => {
+                info!("No content found in DB for key: {key_as_slice}");
+                return T::default();
+            }
+            Err(_) => {
+                error!("Seems the sender that was supposed to read from the DB panicked");
+                return T::default();
+            }
+        };
+        match serde_json::from_str(&record.content) {
+            Ok(x) => x,
+            Err(err_msg) => {
+                error!(?err_msg, ?record.content, "Failed to convert content extracted from the database");
+                T::default()
+            }
+        }
     }
 }

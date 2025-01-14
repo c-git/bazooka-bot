@@ -198,6 +198,7 @@ dependencies = [
  "rstest",
  "secrecy 0.10.3",
  "serde",
+ "serde_json",
  "shuttle-runtime",
  "shuttle-serenity",
  "shuttle-shared-db",

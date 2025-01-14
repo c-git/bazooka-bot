@@ -4,7 +4,6 @@ use anyhow::Context as _;
 use bazooka_bot::{commands_list, get_secret_discord_token, Data, SharedConfig, StartupConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
-use shuttle_persist::PersistInstance;
 use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use tracing::{error, info, warn};
@@ -13,16 +12,24 @@ use version::version;
 #[shuttle_runtime::main]
 async fn main(
     #[shuttle_runtime::Secrets] secret_store: SecretStore,
-    #[shuttle_persist::Persist] persist: PersistInstance,
+    #[shuttle_shared_db::Postgres(
+        local_uri = "postgres://db_user:password@localhost:5432/bazooka_bot"
+    )]
+    db_pool: sqlx::PgPool,
 ) -> ShuttleSerenity {
     info!("Bot version is {}", version::version!());
+
+    sqlx::migrate!("./migrations")
+        .run(&db_pool)
+        .await
+        .expect("Migrations failed");
 
     // Load setup values
     let discord_token = get_secret_discord_token(&secret_store)?;
     let startup_config =
         StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
     let shared_config =
-        SharedConfig::try_new(&secret_store, persist).context("failed to created shared_config")?;
+        SharedConfig::try_new(&secret_store, db_pool).context("failed to created shared_config")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

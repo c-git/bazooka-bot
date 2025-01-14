@@ -1,16 +1,13 @@
-use std::fmt::Display;
-
-use anyhow::{bail, Context as _};
-use poise::serenity_prelude::CacheHttp;
-use tracing::{info, warn};
-
 use crate::{
     config::SharedConfig,
-    model::{one_based_id::OneBasedId, user_serde::UserIdNumber, PersistData as _},
+    model::{one_based_id::OneBasedId, user_serde::UserIdNumber},
 };
+use anyhow::{bail, Context as _};
+use poise::serenity_prelude::CacheHttp;
+use std::fmt::Display;
+use tracing::{info, warn};
 
-pub mod migration;
-pub(crate) mod protected_ops;
+pub mod protected_ops;
 
 pub type IdeaId = OneBasedId;
 
@@ -265,11 +262,11 @@ impl Ideas {
     }
 
     pub(crate) fn new(shared_config: &SharedConfig) -> Self {
-        // TODO 4: Disable Migration after data on server upgraded
         // shared_config.persist.data_load_or_default(Self::DATA_KEY)
-        shared_config
-            .persist
-            .data_load_or_migration(Self::DATA_KEY, crate::migration::migrate_old_ideas)
+        // shared_config
+        //     .persist
+        //     .data_load_or_migration(Self::DATA_KEY, crate::migration::migrate_old_ideas)
+        todo!("Load ideas from DB")
     }
 
     /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest

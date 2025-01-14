@@ -13,7 +13,6 @@ pub use self::{
 
 mod commands;
 mod config;
-mod migration;
 mod model;
 mod secrets;
 

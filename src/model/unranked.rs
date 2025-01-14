@@ -1,14 +1,10 @@
 //! Groups the functionality related to unranked business logic
 
-use std::sync::{Arc, Mutex};
-
 use crate::{
     config::SharedConfig,
-    model::{
-        unranked::{ideas::Ideas, scores::Scores},
-        PersistData as _,
-    },
+    model::unranked::{ideas::Ideas, scores::Scores},
 };
+use std::sync::{Arc, Mutex};
 
 pub mod ideas;
 pub mod scores;
@@ -30,6 +26,7 @@ impl Unranked {
     }
 
     fn save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        self.shared_config.persist.data_save(key, value)
+        // self.shared_config.persist.data_save(key, value)
+        todo!("Save Unranked")
     }
 }

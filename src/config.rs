@@ -2,7 +2,6 @@ use std::{collections::HashSet, time::Instant};
 
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
-use shuttle_persist::PersistInstance;
 use shuttle_runtime::SecretStore;
 
 use crate::secrets::KeyName;
@@ -20,7 +19,7 @@ pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
     pub channel_unranked: ChannelId,
-    pub persist: PersistInstance,
+    pub db_pool: sqlx::PgPool,
     pub channel_bot_status: Option<ChannelId>,
 }
 
@@ -51,7 +50,7 @@ impl StartupConfig {
 impl SharedConfig {
     pub fn try_new(
         secret_store: &SecretStore,
-        persist: PersistInstance,
+        db_pool: sqlx::PgPool,
     ) -> anyhow::Result<&'static Self> {
         let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
         let channel_unranked = KeyName::ChannelUnrankedId.get_non_secret_parse(secret_store)?;
@@ -60,7 +59,7 @@ impl SharedConfig {
             start_instant: Instant::now(),
             auth_role_id,
             channel_unranked,
-            persist,
+            db_pool,
             channel_bot_status,
         });
         Ok(Box::leak(result))

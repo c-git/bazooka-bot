@@ -10,7 +10,7 @@ use tracing::{error, info, instrument, warn};
 
 use crate::{commands::do_start_event, Data};
 
-use super::{one_based_id::OneBasedId, PersistData as _};
+use super::one_based_id::OneBasedId;
 
 pub(crate) mod protected_ops;
 
@@ -41,7 +41,8 @@ pub struct ScheduledTasks {
 impl ScheduledTasks {
     pub const DISPLAY_TITLE: &'static str = "Scheduled Tasks";
     pub(crate) fn new(shared_config: &crate::SharedConfig) -> Self {
-        shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        // shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        todo!("Load Scheduled Tasks")
     }
 }
 

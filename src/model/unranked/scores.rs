@@ -5,10 +5,7 @@ use tracing::{error, info};
 
 use crate::{
     config::SharedConfig,
-    model::{
-        user_serde::{UserIdNumber, UserName, UserRecord},
-        PersistData as _,
-    },
+    model::user_serde::{UserIdNumber, UserName, UserRecord},
     RemoveElement as _, Resettable,
 };
 
@@ -167,7 +164,8 @@ impl Scores {
     }
 
     pub(crate) fn new(shared_config: &SharedConfig) -> Self {
-        shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        // shared_config.persist.data_load_or_default(Self::DATA_KEY)
+        todo!("Load Scores")
     }
 }
 

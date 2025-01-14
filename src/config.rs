@@ -103,8 +103,7 @@ impl SharedConfig {
         Ok(())
     }
 
-    #[tokio::main] // to block on future
-    pub async fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(
+    pub fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(
         &self,
         key_as_slice: &str,
     ) -> T {

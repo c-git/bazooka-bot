@@ -64,4 +64,14 @@ impl SharedConfig {
         });
         Ok(Box::leak(result))
     }
+    #[allow(unused_variables)]
+    /// Doesn't actually perform the save but spawns a task to do it in the background
+    pub fn save_kv<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
+        todo!("spawn task to save")
+    }
+
+    #[allow(unused_variables)]
+    pub fn load_or_default_kv<T: serde::de::DeserializeOwned + Default>(&self, key: &str) -> T {
+        todo!("Load value, block on task")
+    }
 }

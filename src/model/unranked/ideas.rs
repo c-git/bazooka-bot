@@ -262,11 +262,7 @@ impl Ideas {
     }
 
     pub fn new(shared_config: &SharedConfig) -> Self {
-        // shared_config.persist.data_load_or_default(Self::DATA_KEY)
-        // shared_config
-        //     .persist
-        //     .data_load_or_migration(Self::DATA_KEY, crate::migration::migrate_old_ideas)
-        todo!("Load ideas from DB")
+        shared_config.load_or_default_kv(Self::DATA_KEY)
     }
 
     /// If any ideas exist it returns the idea along with its index that has the most votes and appears earliest

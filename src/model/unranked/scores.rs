@@ -164,8 +164,7 @@ impl Scores {
     }
 
     pub fn new(shared_config: &SharedConfig) -> Self {
-        // shared_config.persist.data_load_or_default(Self::DATA_KEY)
-        todo!("Load Scores")
+        shared_config.load_or_default_kv(Self::DATA_KEY)
     }
 }
 

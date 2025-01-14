@@ -26,7 +26,6 @@ impl Unranked {
     }
 
     fn save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        // self.shared_config.persist.data_save(key, value)
-        todo!("Save Unranked")
+        self.shared_config.save_kv(key, value)
     }
 }

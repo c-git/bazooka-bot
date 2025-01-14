@@ -7,6 +7,7 @@
 mod used_in_bin {
     use shuttle_serenity as _;
     use shuttle_shared_db as _;
+    use tracing_subscriber as _;
 }
 
 use tracing::{info, instrument};

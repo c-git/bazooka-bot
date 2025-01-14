@@ -1,12 +1,16 @@
-use std::sync::Arc;
-
 use anyhow::Context as _;
 use bazooka_bot::{commands_list, get_secret_discord_token, Data, SharedConfig, StartupConfig};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
 use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
+use std::sync::Arc;
 use tracing::{error, info, warn};
+use tracing_subscriber::{
+    fmt::{self, format::FmtSpan},
+    prelude::*,
+    EnvFilter,
+};
 use version::version;
 
 #[shuttle_runtime::main]
@@ -17,6 +21,14 @@ async fn main(
     )]
     db_pool: sqlx::PgPool,
 ) -> ShuttleSerenity {
+    tracing_subscriber::registry()
+        .with(fmt::layer().with_span_events(FmtSpan::ACTIVE))
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,info")),
+        )
+        .init();
+
     info!("Bot version is {}", version::version!());
 
     sqlx::migrate!("./migrations")

@@ -5,14 +5,11 @@ use tracing::{error, info};
 
 use crate::{
     config::SharedConfig,
-    model::{
-        user_serde::{UserIdNumber, UserName, UserRecord},
-        PersistData as _,
-    },
+    model::user_serde::{UserIdNumber, UserName, UserRecord},
     RemoveElement as _, Resettable,
 };
 
-pub(crate) mod protected_ops;
+pub mod protected_ops;
 
 pub type ScoreValue = i8;
 type ScoresCache = BTreeMap<ScoreValue, Vec<UserName>>;
@@ -166,8 +163,8 @@ impl Scores {
         self.message = msg;
     }
 
-    pub(crate) fn new(shared_config: &SharedConfig) -> Self {
-        shared_config.persist.data_load_or_default(Self::DATA_KEY)
+    pub async fn new(shared_config: &SharedConfig) -> Self {
+        shared_config.load_or_default_kv(Self::DATA_KEY).await
     }
 }
 

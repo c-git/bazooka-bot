@@ -10,10 +10,6 @@
 
 use std::sync::{Arc, Mutex};
 
-use anyhow::Context as _;
-use shuttle_persist::PersistInstance;
-use tracing::{error, info};
-
 use crate::config::SharedConfig;
 
 use self::{schedule::ScheduledTasks, unranked::Unranked};
@@ -37,15 +33,15 @@ pub struct DataInner {
 }
 
 impl Data {
-    pub fn new(
+    pub async fn new(
         shared_config: &'static SharedConfig,
         ctx: poise::serenity_prelude::Context,
     ) -> Self {
         let result = Data {
             inner: Arc::new(DataInner {
-                unranked: Unranked::new(shared_config),
+                unranked: Unranked::new(shared_config).await,
                 shared_config,
-                schedule_tasks: Arc::new(Mutex::new(ScheduledTasks::new(shared_config))),
+                schedule_tasks: Arc::new(Mutex::new(ScheduledTasks::new(shared_config).await)),
                 ctx,
             }),
         };
@@ -54,54 +50,6 @@ impl Data {
     }
 
     fn save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        self.inner.shared_config.persist.data_save(key, value)
-    }
-}
-
-pub(crate) trait PersistData {
-    fn data_load_or_default<T: for<'a> serde::Deserialize<'a> + Default>(&self, key: &str) -> T;
-    fn data_load_or_migration<T, F>(&self, key: &str, f: F) -> T
-    where
-        T: for<'a> serde::Deserialize<'a>,
-        F: FnOnce(&str, &PersistInstance) -> T;
-    fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()>;
-}
-
-impl PersistData for PersistInstance {
-    fn data_save<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        self.save(key, value)
-            .with_context(|| format!("failed to save '{key}' data"))?;
-        info!("'{key}' data saved");
-        Ok(())
-    }
-
-    fn data_load_or_default<T: for<'a> serde::Deserialize<'a> + Default>(&self, key: &str) -> T {
-        match self.load::<T>(key) {
-            Ok(data) => {
-                info!("'{key}' data loaded successfully");
-                data
-            }
-            Err(e) => {
-                error!("failed to load '{key}' data. Error was: {e}");
-                Default::default()
-            }
-        }
-    }
-
-    fn data_load_or_migration<T, F>(&self, key: &str, f: F) -> T
-    where
-        T: for<'a> serde::Deserialize<'a>,
-        F: FnOnce(&str, &PersistInstance) -> T,
-    {
-        match self.load::<T>(key) {
-            Ok(data) => {
-                info!("'{key}' data loaded successfully");
-                data
-            }
-            Err(e) => {
-                error!("failed to load '{key}' data. Going fall back to attempting migration. Error was: {e}");
-                f(key, self)
-            }
-        }
+        self.inner.shared_config.save_kv(key, value)
     }
 }

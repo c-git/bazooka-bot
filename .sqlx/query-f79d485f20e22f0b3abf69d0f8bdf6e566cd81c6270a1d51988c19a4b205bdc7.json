@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO kv_store (id, content)\n                VALUES ($1, $2)\n                ON CONFLICT(id)\n                DO UPDATE SET\n                content = EXCLUDED.content;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f79d485f20e22f0b3abf69d0f8bdf6e566cd81c6270a1d51988c19a4b205bdc7"
+}

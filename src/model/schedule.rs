@@ -1,25 +1,21 @@
+use super::one_based_id::OneBasedId;
+use crate::{commands::do_start_event, Data};
+use anyhow::{bail, Context};
+use human_time::ToHumanTimeString;
+use shuttle_runtime::tokio::{self, task::JoinHandle};
 use std::{
     fmt::Display,
     time::{Duration, UNIX_EPOCH},
 };
-
-use anyhow::{bail, Context};
-use human_time::ToHumanTimeString;
-use tokio::task::JoinHandle;
 use tracing::{error, info, instrument, warn};
 
-use crate::{commands::do_start_event, Data};
-
-use super::{one_based_id::OneBasedId, PersistData as _};
-
-pub(crate) mod protected_ops;
-
+pub mod protected_ops;
 pub type ScheduledTaskId = OneBasedId;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
 pub struct UnixTimestamp(i32);
 impl UnixTimestamp {
-    pub(crate) fn new(value: i32) -> Self {
+    pub fn new(value: i32) -> Self {
         Self(value)
     }
 }
@@ -40,8 +36,8 @@ pub struct ScheduledTasks {
 
 impl ScheduledTasks {
     pub const DISPLAY_TITLE: &'static str = "Scheduled Tasks";
-    pub(crate) fn new(shared_config: &crate::SharedConfig) -> Self {
-        shared_config.persist.data_load_or_default(Self::DATA_KEY)
+    pub async fn new(shared_config: &crate::SharedConfig) -> Self {
+        shared_config.load_or_default_kv(Self::DATA_KEY).await
     }
 }
 

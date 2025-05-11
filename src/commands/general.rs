@@ -53,7 +53,9 @@ pub async fn uptime(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "help", skip(ctx))]
 pub async fn help(
     ctx: Context<'_>,
-    #[description = "Specific command to show help about"] command: Option<String>,
+    #[description = "Specific command to show help about"]
+    #[autocomplete = "poise::builtins::autocomplete_command"]
+    command: Option<String>,
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     let config = Default::default();

@@ -5,6 +5,7 @@ use tracing::{info, instrument};
 
 use self::{idea::idea, score::score};
 use crate::{
+    Context, Data,
     commands::{
         call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start,
         unranked_cmd::{
@@ -12,7 +13,6 @@ use crate::{
             score::{display_scores_channel, do_scores_reset},
         },
     },
-    Context, Data,
 };
 
 mod idea;

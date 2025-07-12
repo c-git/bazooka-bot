@@ -72,6 +72,6 @@ fi
 # Create the application database
 export DATABASE_URL=postgres://${APP_USER}:${APP_USER_PWD}@localhost:${DB_PORT}/${APP_DB_NAME}
 sqlx database create
-sqlx migrate run --source migrations_pg
+sqlx migrate run --source migrations
 
 >&2 echo "Postgres has been migrated, ready to go!"

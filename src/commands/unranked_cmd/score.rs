@@ -1,16 +1,17 @@
 //! Groups the commands related to the scoring functionality for unranked
 
 use crate::{
+    Context, Data,
     commands::{is_auth, tracing_handler_end, tracing_handler_start},
     model::{
         unranked::scores::{ScoreValue, Scores},
         user_serde::UserRecordSupport as _,
     },
-    sanitize_markdown, Context, Data,
+    sanitize_markdown,
 };
 use poise::{
-    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
     CreateReply,
+    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
 };
 use std::fmt::Debug;
 use tracing::{info, instrument};

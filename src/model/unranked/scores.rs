@@ -4,9 +4,9 @@ use anyhow::bail;
 use tracing::{error, info};
 
 use crate::{
+    RemoveElement as _, Resettable,
     config::SharedConfig,
     model::user_serde::{UserIdNumber, UserName, UserRecord},
-    RemoveElement as _, Resettable,
 };
 
 pub mod protected_ops;

@@ -1,6 +1,6 @@
 use super::one_based_id::OneBasedId;
-use crate::{commands::do_start_event, Data};
-use anyhow::{bail, Context};
+use crate::{Data, commands::do_start_event};
+use anyhow::{Context, bail};
 use human_time::ToHumanTimeString;
 use shuttle_runtime::tokio::{self, task::JoinHandle};
 use std::{
@@ -208,9 +208,9 @@ impl ScheduledTasks {
                 Ok(_) => (),
                 Err(e) => {
                     error!(
-                            "Removing task with objective {} because failed to hydrate with error: {e:?}",
-                            self.data[i].objective
-                        );
+                        "Removing task with objective {} because failed to hydrate with error: {e:?}",
+                        self.data[i].objective
+                    );
                     self.data.remove(i);
                 }
             };

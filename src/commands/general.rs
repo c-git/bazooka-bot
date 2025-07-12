@@ -4,8 +4,8 @@ use human_time::ToHumanTimeString as _;
 use tracing::{info, instrument};
 
 use crate::{
-    commands::{tracing_handler_end, tracing_handler_start},
     Context,
+    commands::{tracing_handler_end, tracing_handler_start},
 };
 
 /// Responds with "pong"
@@ -53,7 +53,9 @@ pub async fn uptime(ctx: Context<'_>) -> anyhow::Result<()> {
 #[instrument(name = "help", skip(ctx))]
 pub async fn help(
     ctx: Context<'_>,
-    #[description = "Specific command to show help about"] command: Option<String>,
+    #[description = "Specific command to show help about"]
+    #[autocomplete = "poise::builtins::autocomplete_command"]
+    command: Option<String>,
 ) -> anyhow::Result<()> {
     tracing_handler_start(&ctx).await;
     let config = Default::default();

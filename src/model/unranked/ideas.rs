@@ -2,7 +2,7 @@ use crate::{
     config::SharedConfig,
     model::{one_based_id::OneBasedId, user_serde::UserIdNumber},
 };
-use anyhow::{bail, Context as _};
+use anyhow::{Context as _, bail};
 use poise::serenity_prelude::CacheHttp;
 use std::fmt::Display;
 use tracing::{info, warn};
@@ -59,11 +59,7 @@ impl Idea {
     fn change_vote(&mut self, user_id_number: UserIdNumber, is_add_vote: bool) -> bool {
         let user_number: UserIdNumber = user_id_number;
         let position = self.voters.iter().enumerate().find_map(|(i, voter)| {
-            if &user_number == voter {
-                Some(i)
-            } else {
-                None
-            }
+            if &user_number == voter { Some(i) } else { None }
         });
         match (position, is_add_vote) {
             (None, false) | (Some(_), true) => {

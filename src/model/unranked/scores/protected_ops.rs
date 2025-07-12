@@ -4,11 +4,11 @@
 use std::sync::MutexGuard;
 
 use crate::{
+    Resettable as _,
     model::{
         unranked::Unranked,
         user_serde::{UserIdNumber, UserRecord},
     },
-    Resettable as _,
 };
 
 use super::{ScoreValue, Scores};

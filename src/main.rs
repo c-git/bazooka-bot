@@ -1,5 +1,5 @@
 use anyhow::Context as _;
-use bazooka_bot::{commands_list, get_secret_discord_token, Data, SharedConfig, StartupConfig};
+use bazooka_bot::{Data, SharedConfig, StartupConfig, commands_list, get_secret_discord_token};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
 use shuttle_runtime::SecretStore;
@@ -7,9 +7,9 @@ use shuttle_serenity::ShuttleSerenity;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 use tracing_subscriber::{
+    EnvFilter,
     fmt::{self, format::FmtSpan},
     prelude::*,
-    EnvFilter,
 };
 use version::version;
 

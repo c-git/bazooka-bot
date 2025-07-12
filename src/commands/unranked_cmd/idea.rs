@@ -3,20 +3,21 @@
 use std::{fmt::Debug, num::NonZeroUsize};
 
 use poise::{
-    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
     CreateReply,
+    serenity_prelude::{CacheHttp, ChannelId, CreateEmbed, CreateMessage},
 };
 use tracing::{info, instrument};
 
 use crate::{
+    Data,
     commands::{
-        call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start, Context,
+        Context, call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start,
     },
     model::{
         unranked::ideas::{IdeaId, Ideas},
         user_serde::UserRecordSupport as _,
     },
-    sanitize_markdown, Data,
+    sanitize_markdown,
 };
 
 #[poise::command(

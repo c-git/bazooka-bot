@@ -2,15 +2,15 @@
 
 use std::num::NonZeroUsize;
 
-use poise::{serenity_prelude::CreateEmbed, CreateReply};
+use poise::{CreateReply, serenity_prelude::CreateEmbed};
 use tracing::{info, instrument};
 
 use crate::{
+    Context,
     commands::{call_to_parent_command, is_auth, tracing_handler_end, tracing_handler_start},
     model::schedule::{
         Objective, OutcomeCreateScheduledTask, ScheduledTaskId, ScheduledTasks, UnixTimestamp,
     },
-    Context,
 };
 
 #[poise::command(

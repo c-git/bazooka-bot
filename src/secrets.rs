@@ -2,8 +2,8 @@
 
 use std::str::FromStr;
 
-use anyhow::{bail, Context as _};
-use secrecy::{zeroize::DefaultIsZeroes, SecretBox, SecretString};
+use anyhow::{Context as _, bail};
+use secrecy::{SecretBox, SecretString, zeroize::DefaultIsZeroes};
 use shuttle_runtime::SecretStore;
 use tracing::warn;
 

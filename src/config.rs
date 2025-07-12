@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Debug, time::Instant};
 
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
-use shuttle_runtime::{tokio, SecretStore};
+use shuttle_runtime::{SecretStore, tokio};
 use tracing::{error, info};
 
 use crate::secrets::KeyName;

@@ -4,8 +4,8 @@ use human_time::ToHumanTimeString as _;
 use tracing::{info, instrument};
 
 use crate::{
-    commands::{tracing_handler_end, tracing_handler_start},
     Context,
+    commands::{tracing_handler_end, tracing_handler_start},
 };
 
 /// Responds with "pong"

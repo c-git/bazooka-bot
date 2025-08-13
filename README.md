@@ -68,3 +68,4 @@ It should be scheduled manually each season by an officer.
 - [ ] Make reset a 2 stage process with a confirmation
 - [ ] Add a permission that can be used as a default_permission to tell slash commands just not to show if a user doesn't have it instead of returning a no permissions message
 - [ ] Use [merge](https://neon.tech/postgresql/postgresql-tutorial/postgresql-merge) instead of on every save (Or just only try to save the differential)
+.

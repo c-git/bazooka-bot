@@ -43,13 +43,13 @@ async fn call_to_parent_command(ctx: Context<'_>) -> anyhow::Result<()> {
 
 pub fn commands_list() -> Vec<poise::Command<Data, anyhow::Error>> {
     vec![
-        ping(),
-        help(),
         general::version(),
-        uptime(),
-        unranked(),
-        schedule(),
+        help(),
+        ping(),
         register(),
+        schedule(),
+        unranked(),
+        uptime(),
     ]
 }
 

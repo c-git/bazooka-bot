@@ -13,7 +13,7 @@ pub mod protected_ops;
 pub type ScheduledTaskId = OneBasedId;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
-pub struct UnixTimestamp(i32);
+pub struct UnixTimestamp(pub i32);
 impl UnixTimestamp {
     pub fn new(value: i32) -> Self {
         Self(value)

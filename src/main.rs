@@ -84,9 +84,9 @@ async fn main(
                     error!("Development run detected but no guild ID found so slash commands NOT registered");
                 }
                 let connect_msg = format!(
-                    "{} is connected! Version: {} [{}]", 
+                    "{} is connected! Version: {}\n{}", 
                     ready.user.name, version!(),
-                    heartbeat::time_since_last_heartbeat(db_pool.clone()),
+                    heartbeat::last_heartbeat_info(db_pool.clone()).await,
                 );
                 info!("{connect_msg}");
                 if let Some(channel) = shared_config.channel_bot_status{

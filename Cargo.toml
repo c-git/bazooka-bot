@@ -1,6 +1,6 @@
 [package]
 name = "bazooka-bot"
-version = "0.6.3"
+version = "0.6.4-dev"
 edition = "2024"
 publish = false
 

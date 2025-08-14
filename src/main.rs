@@ -1,5 +1,7 @@
 use anyhow::Context as _;
-use bazooka_bot::{Data, SharedConfig, StartupConfig, commands_list, get_secret_discord_token};
+use bazooka_bot::{
+    Data, SharedConfig, StartupConfig, commands_list, get_secret_discord_token, heartbeat,
+};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
 use shuttle_runtime::SecretStore;
@@ -40,8 +42,8 @@ async fn main(
     let discord_token = get_secret_discord_token(&secret_store)?;
     let startup_config =
         StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
-    let shared_config =
-        SharedConfig::try_new(&secret_store, db_pool).context("failed to created shared_config")?;
+    let shared_config = SharedConfig::try_new(&secret_store, db_pool.clone())
+        .context("failed to created shared_config")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -81,7 +83,11 @@ async fn main(
                 } else {
                     error!("Development run detected but no guild ID found so slash commands NOT registered");
                 }
-                let connect_msg = format!("{} is connected! Version: {}", ready.user.name, version!());
+                let connect_msg = format!(
+                    "{} is connected! Version: {}\n{}", 
+                    ready.user.name, version!(),
+                    heartbeat::last_heartbeat_info(db_pool.clone()).await,
+                );
                 info!("{connect_msg}");
                 if let Some(channel) = shared_config.channel_bot_status{
                     channel.say(ctx, connect_msg).await?;
@@ -89,6 +95,7 @@ async fn main(
                     warn!("Not sending connection notification because channel_bot_status not set");
                 }
                 let data = Data::new(shared_config, ctx.clone()).await;
+                heartbeat::start_heartbeat(db_pool);
                 info!("END OF SETUP CLOSURE");
                 Ok(data)
             })

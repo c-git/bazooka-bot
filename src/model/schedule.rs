@@ -13,10 +13,32 @@ pub mod protected_ops;
 pub type ScheduledTaskId = OneBasedId;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Default, Clone, Copy)]
-pub struct UnixTimestamp(i32);
+pub struct UnixTimestamp(pub i32);
 impl UnixTimestamp {
     pub fn new(value: i32) -> Self {
         Self(value)
+    }
+
+    pub fn now() -> anyhow::Result<Self> {
+        let seconds_since_epoch = UNIX_EPOCH
+            .elapsed()
+            .context("failed to get timestamp. System date before Unix Epoch?")?
+            .as_secs();
+        let seconds_since_epoch: i32 = seconds_since_epoch
+            .try_into()
+            .context("failed to convert system time as seconds since epoch into i32")?;
+        Ok(Self(seconds_since_epoch))
+    }
+
+    pub fn to_db_fmt(self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn from_db_fmt(value: &str) -> anyhow::Result<Self> {
+        let value = value
+            .parse::<i32>()
+            .with_context(|| format!("failed to convert {value} into i32 for timestamp"))?;
+        Ok(Self(value))
     }
 }
 
@@ -99,15 +121,7 @@ impl ScheduledTask {
             self.task.is_none(),
             "task should have been aborted already if it existed"
         );
-        let seconds_since_epoch = UNIX_EPOCH
-            .elapsed()
-            .context("failed to get timestamp. System date before Unix Epoch?")?
-            .as_secs();
-        let seconds_since_epoch: i32 = seconds_since_epoch
-            .try_into()
-            .context("failed to convert system time as seconds since epoch into i32")?;
-        info!(seconds_since_epoch);
-        let timestamp_now = UnixTimestamp::new(seconds_since_epoch);
+        let timestamp_now = UnixTimestamp::now()?;
         info!("timestamp_now={timestamp_now:?}");
         let seconds_to_desired = self.desired_execution_timestamp.0 - timestamp_now.0;
         info!(seconds_to_desired);

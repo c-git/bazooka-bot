@@ -8,7 +8,7 @@ This is the rust replacement for the bot [originally](https://github.com/fone-gi
 
 <!-- Leave completed items as a feature list / what is being considered for implementation -->
 
-Note: Some checked off items my not be complete only started but at the time of writing (2024-04-07) all are completed.
+Note: Some checked off items my not be complete only started but at the time of writing (2025-08-13) all are completed.
 If they are not there will be TODO's in the code itself.
 The check off only denotes the start of the feature as then the TODOs are moved into the code as maintaining two places is not sustainable.
 
@@ -53,12 +53,11 @@ It should be scheduled manually each season by an officer.
 
 # Nice to have
 
-- [ ] Add ability for owner to download the data files to facilitate testing before uploading a version
-- [ ] Setup deploy from CI - https://github.com/shuttle-hq/deploy-action
-- [ ] Setup test deployment on shuttle (idle time of about 15 minutes should be good)
-  - [ ] [Naming](https://docs.shuttle.rs/configuration/project-name)
-  - [ ] From release notes from 0.40.0
-    - Added a --secrets arg to the run and deploy commands that allows you to use a different secrets file than the default
+- [x] Track how long the bot has been up or down
+- [ ] Keep history of downtime
+- [ ] Add ability for owner to download the data
+- [ ] Add ability for owner to replace the data (intended to be from something downloaded previously)
+- [x] Setup deploy from CI - https://github.com/shuttle-hq/deploy-action
 - [ ] Add message ID to the trace at ingress
 - [x] Sanitize input for markdown like `**` for example rn causes problems with bolding the ideas
 - [ ] Add web page (with info and to wake up bot, would help for test bot that would go to sleep) https://docs.shuttle.rs/templates/tutorials/custom-service

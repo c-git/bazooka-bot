@@ -1,4 +1,4 @@
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 pub async fn save_kv(pool: &sqlx::PgPool, key: &str, value: String) {
     let query = sqlx::query!(
@@ -14,7 +14,7 @@ INSERT INTO kv_store (id, content)
     match query.execute(pool).await {
         Ok(query_result) => {
             if query_result.rows_affected() == 1 {
-                info!("Save completed for key: {key}");
+                debug!("Save completed for key: {key}");
             } else {
                 error!(
                     ?key,

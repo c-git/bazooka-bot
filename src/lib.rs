@@ -21,6 +21,7 @@ pub use self::{
 
 mod commands;
 mod config;
+mod db;
 pub mod heartbeat;
 mod model;
 mod secrets;

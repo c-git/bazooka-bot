@@ -18,6 +18,17 @@ impl UnixTimestamp {
     pub fn new(value: i32) -> Self {
         Self(value)
     }
+
+    pub fn now() -> anyhow::Result<Self> {
+        let seconds_since_epoch = UNIX_EPOCH
+            .elapsed()
+            .context("failed to get timestamp. System date before Unix Epoch?")?
+            .as_secs();
+        let seconds_since_epoch: i32 = seconds_since_epoch
+            .try_into()
+            .context("failed to convert system time as seconds since epoch into i32")?;
+        Ok(Self(seconds_since_epoch))
+    }
 }
 
 impl Display for UnixTimestamp {
@@ -99,14 +110,7 @@ impl ScheduledTask {
             self.task.is_none(),
             "task should have been aborted already if it existed"
         );
-        let seconds_since_epoch = UNIX_EPOCH
-            .elapsed()
-            .context("failed to get timestamp. System date before Unix Epoch?")?
-            .as_secs();
-        let seconds_since_epoch: i32 = seconds_since_epoch
-            .try_into()
-            .context("failed to convert system time as seconds since epoch into i32")?;
-        let timestamp_now = UnixTimestamp::new(seconds_since_epoch);
+        let timestamp_now = UnixTimestamp::now()?;
         info!("timestamp_now={timestamp_now:?}");
         let seconds_to_desired = self.desired_execution_timestamp.0 - timestamp_now.0;
         info!(seconds_to_desired);

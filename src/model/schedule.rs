@@ -29,6 +29,17 @@ impl UnixTimestamp {
             .context("failed to convert system time as seconds since epoch into i32")?;
         Ok(Self(seconds_since_epoch))
     }
+
+    pub fn to_db_fmt(self) -> String {
+        self.0.to_string()
+    }
+
+    pub fn from_db_fmt(value: &str) -> anyhow::Result<Self> {
+        let value = value
+            .parse::<i32>()
+            .with_context(|| format!("failed to convert {value} into i32 for timestamp"))?;
+        Ok(Self(value))
+    }
 }
 
 impl Display for UnixTimestamp {

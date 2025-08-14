@@ -106,7 +106,6 @@ impl ScheduledTask {
         let seconds_since_epoch: i32 = seconds_since_epoch
             .try_into()
             .context("failed to convert system time as seconds since epoch into i32")?;
-        info!(seconds_since_epoch);
         let timestamp_now = UnixTimestamp::new(seconds_since_epoch);
         info!("timestamp_now={timestamp_now:?}");
         let seconds_to_desired = self.desired_execution_timestamp.0 - timestamp_now.0;

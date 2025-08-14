@@ -10,7 +10,7 @@ use crate::model::{unranked::Unranked, user_serde::UserIdNumber};
 use super::{Idea, IdeaId, Ideas};
 
 impl Unranked {
-    fn guard_idea(&self) -> anyhow::Result<MutexGuard<Ideas>> {
+    fn guard_idea(&'_ self) -> anyhow::Result<MutexGuard<'_, Ideas>> {
         match self.ideas.lock() {
             Ok(guard) => Ok(guard),
             Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),

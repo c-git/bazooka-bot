@@ -15,7 +15,7 @@ use super::{ScoreValue, Scores};
 
 impl Unranked {
     /// Serves as the link to the private function that returns the guard
-    fn guard_scores(&self) -> anyhow::Result<MutexGuard<Scores>> {
+    fn guard_scores(&'_ self) -> anyhow::Result<MutexGuard<'_, Scores>> {
         match self.scores.lock() {
             Ok(guard) => Ok(guard),
             Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),

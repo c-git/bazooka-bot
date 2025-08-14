@@ -84,7 +84,7 @@ async fn main(
                     error!("Development run detected but no guild ID found so slash commands NOT registered");
                 }
                 let connect_msg = format!(
-                    "{} is connected! Version: {}, Downtime: {}", 
+                    "{} is connected! Version: {} [{}]", 
                     ready.user.name, version!(),
                     heartbeat::time_since_last_heartbeat(db_pool.clone()),
                 );

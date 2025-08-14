@@ -12,7 +12,7 @@ use super::{
 
 impl Data {
     /// Serves as the link to the private function that returns the guard
-    fn guard_schedule(&self) -> anyhow::Result<MutexGuard<ScheduledTasks>> {
+    fn guard_schedule(&'_ self) -> anyhow::Result<MutexGuard<'_, ScheduledTasks>> {
         match self.inner.schedule_tasks.lock() {
             Ok(guard) => Ok(guard),
             Err(e) => anyhow::bail!("failed to lock mutex because '{e}"),

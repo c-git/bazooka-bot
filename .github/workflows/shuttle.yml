@@ -5,6 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  schedule:
+    - cron: '25 05 20 * *' # 01:25 GMT-4
   push:
     branches:
       - main

@@ -55,7 +55,7 @@ It should be scheduled manually each season by an officer.
 
 - [ ] Add ability for owner to download the data
 - [ ] Add ability for owner to replace the data (intended to be from something downloaded previously)
-- [ ] Setup deploy from CI - https://github.com/shuttle-hq/deploy-action
+- [x] Setup deploy from CI - https://github.com/shuttle-hq/deploy-action
 - [ ] Setup test deployment on shuttle (idle time of about 15 minutes should be good)
   - [ ] [Naming](https://docs.shuttle.rs/configuration/project-name)
   - [ ] From release notes from 0.40.0

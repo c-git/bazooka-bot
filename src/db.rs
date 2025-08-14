@@ -29,3 +29,20 @@ INSERT INTO kv_store (id, content)
         ),
     }
 }
+
+pub async fn load_kv(pool: &sqlx::PgPool, key: &str) -> Option<String> {
+    match sqlx::query!("SELECT content FROM kv_store where id = $1", key)
+        .fetch_optional(pool)
+        .await
+    {
+        Ok(Some(record)) => Some(record.content),
+        Ok(None) => {
+            info!("No content found in DB for key: {key}");
+            None
+        }
+        Err(err_msg) => {
+            error!(?err_msg, "Failed to get content for key: {key}");
+            None
+        }
+    }
+}

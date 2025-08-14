@@ -3,7 +3,7 @@ use std::{collections::HashSet, fmt::Debug, time::Instant};
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
 use shuttle_runtime::{SecretStore, tokio};
-use tracing::{error, info};
+use tracing::error;
 
 use crate::secrets::KeyName;
 
@@ -81,27 +81,17 @@ impl SharedConfig {
         &self,
         key: &str,
     ) -> T {
-        let record_opt = match sqlx::query!("SELECT content FROM kv_store where id = $1", key)
-            .fetch_optional(&self.db_pool)
-            .await
-        {
-            Ok(content) => content,
-            Err(err_msg) => {
-                error!(?err_msg, "Failed to get content for key: {key}");
-                None
-            }
+        let Some(content) = crate::db::load_kv(&self.db_pool, key).await else {
+            return T::default();
         };
-        let record = match record_opt {
-            Some(record) => record,
-            None => {
-                info!("No content found in DB for key: {key}");
-                return T::default();
-            }
-        };
-        match serde_json::from_str(&record.content) {
+        match serde_json::from_str(&content) {
             Ok(x) => x,
             Err(err_msg) => {
-                error!(?err_msg, ?record.content, "Failed to convert content extracted from the database");
+                error!(
+                    ?err_msg,
+                    ?content,
+                    "Failed to convert content extracted from the database"
+                );
                 T::default()
             }
         }

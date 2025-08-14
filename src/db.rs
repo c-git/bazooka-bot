@@ -1,6 +1,6 @@
 use tracing::{error, info};
 
-pub async fn save_kv(pool: &sqlx::PgPool, key: String, value: String) {
+pub async fn save_kv(pool: &sqlx::PgPool, key: &str, value: String) {
     let query = sqlx::query!(
         "\
 INSERT INTO kv_store (id, content)

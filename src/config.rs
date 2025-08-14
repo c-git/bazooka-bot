@@ -72,7 +72,7 @@ impl SharedConfig {
         let key = key.to_string();
         let value = serde_json::to_string(value).context("failed to convert to json")?;
         tokio::spawn(async move {
-            crate::db::save_kv(&pool, key, value).await;
+            crate::db::save_kv(&pool, &key, value).await;
         });
         Ok(())
     }

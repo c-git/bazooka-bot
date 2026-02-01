@@ -20,7 +20,6 @@ pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
     pub channel_unranked: ChannelId,
-    pub db_pool: sqlx::PgPool,
     pub channel_bot_status: Option<ChannelId>,
 }
 
@@ -49,10 +48,8 @@ impl StartupConfig {
 }
 
 impl SharedConfig {
-    pub fn try_new(
-        secret_store: &SecretStore,
-        db_pool: sqlx::PgPool,
-    ) -> anyhow::Result<&'static Self> {
+    const KEY_VALUE_STORE_FOLDER: &str = "KV";
+    pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<&'static Self> {
         let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
         let channel_unranked = KeyName::ChannelUnrankedId.get_non_secret_parse(secret_store)?;
         let channel_bot_status = KeyName::ChannelBotStatus.get_non_secret_parse_opt(secret_store);
@@ -60,7 +57,6 @@ impl SharedConfig {
             start_instant: Instant::now(),
             auth_role_id,
             channel_unranked,
-            db_pool,
             channel_bot_status,
         });
         Ok(Box::leak(result))
@@ -68,11 +64,10 @@ impl SharedConfig {
 
     /// Doesn't actually perform the save but spawns a task to do it in the background
     pub fn save_kv<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        let pool = self.db_pool.clone();
         let key = key.to_string();
         let value = serde_json::to_string(value).context("failed to convert to json")?;
         tokio::spawn(async move {
-            crate::db::save_kv(&pool, &key, value).await;
+            crate::db::save_kv(&key, value).await;
         });
         Ok(())
     }
@@ -81,7 +76,7 @@ impl SharedConfig {
         &self,
         key: &str,
     ) -> T {
-        let Some(content) = crate::db::load_kv(&self.db_pool, key).await else {
+        let Some(content) = crate::db::load_kv(key).await else {
             return T::default();
         };
         match serde_json::from_str(&content) {

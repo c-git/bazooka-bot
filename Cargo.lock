@@ -135,7 +135,6 @@ dependencies = [
  "shuttle-runtime",
  "shuttle-serenity",
  "shuttle-shared-db",
- "sqlx",
  "tracing",
  "tracing-subscriber",
  "version",

@@ -1,10 +1,7 @@
 use anyhow::Context as _;
-use bazooka_bot::{
-    Data, SharedConfig, StartupConfig, commands_list, get_secret_discord_token, heartbeat,
-};
+use bazooka_bot::{ClapConfig, Data, SharedConfig, StartupConfig, commands_list, heartbeat};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
-use shuttle_runtime::SecretStore;
 use shuttle_serenity::ShuttleSerenity;
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -15,24 +12,31 @@ use tracing_subscriber::{
 };
 use version::version;
 
+use clap::Parser;
+
 #[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
+async fn main() -> ShuttleSerenity {
     tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,warn")),
+                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,info")),
         )
         .init();
 
     info!("Bot version is {}", version::version!());
 
     // Load setup values
-    let discord_token = get_secret_discord_token(&secret_store)?;
+    info!("Loading environment variables");
+    loadenv::load().expect("failed to load .env file");
+    let clap_config = ClapConfig::parse();
+    info!("ClapConfig: {:?}", clap_config);
+
     let startup_config =
-        StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
+        StartupConfig::try_new(&clap_config).context("failed to create setup config")?;
     let shared_config =
-        SharedConfig::try_new(&secret_store).context("failed to created shared_config")?;
+        SharedConfig::try_new(&clap_config).context("failed to created shared_config")?;
+    let discord_token = clap_config.discord_token;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

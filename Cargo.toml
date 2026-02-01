@@ -6,7 +6,9 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.99"
+clap = { version = "3.0.9", features = ["derive", "env", "wrap_help"] }
 human-time = "0.1.6"
+loadenv = "0.1.4"
 poise = "0.6.1"
 secrecy = "0.10.3"
 serde = { version = "1.0.219", features = ["derive"] }

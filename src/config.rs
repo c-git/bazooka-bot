@@ -48,7 +48,6 @@ impl StartupConfig {
 }
 
 impl SharedConfig {
-    const KEY_VALUE_STORE_FOLDER: &str = "KV";
     pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<&'static Self> {
         let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
         let channel_unranked = KeyName::ChannelUnrankedId.get_non_secret_parse(secret_store)?;

@@ -104,6 +104,7 @@ async fn main(
 
     let client = ClientBuilder::new(
         discord_token.expose_secret(),
+        // TODO 5: Try reducing intents
         GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
     .framework(framework)

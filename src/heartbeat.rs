@@ -21,7 +21,7 @@ pub fn start_heartbeat(db_pool: sqlx::PgPool) {
                 }
             };
             save_kv(&db_pool, KEY, timestamp.to_db_fmt()).await;
-            shuttle_runtime::tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            shuttle_runtime::tokio::time::sleep(std::time::Duration::from_secs(600)).await;
         }
     });
 }

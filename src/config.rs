@@ -2,7 +2,6 @@ use std::{collections::HashSet, fmt::Debug, time::Instant};
 
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
-use shuttle_runtime::tokio;
 use tracing::error;
 
 use crate::ClapConfig;

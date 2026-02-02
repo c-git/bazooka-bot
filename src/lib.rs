@@ -84,29 +84,33 @@ fn sanitize_markdown(s: String) -> String {
     result
 }
 
-#[derive(Parser, Debug)]
+fn parse_secret_string(s: &str) -> Result<SecretString, String> {
+    Ok(SecretString::new(s.to_owned().into()))
+}
+
+#[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct ClapConfig {
-    #[arg(long, env = "DISCORD_TOKEN")]
+    #[clap(long, env = "DISCORD_TOKEN", parse(try_from_str = parse_secret_string))]
     pub discord_token: SecretString,
 
     /// Used mostly for testing to register the commands directly for the guild
-    #[arg(long, env = "REGISTRATION_GUILD_ID")]
+    #[clap(long, env = "REGISTRATION_GUILD_ID")]
     pub registration_guild_id: String,
 
     /// The RoleId of the role that can run privileged commands
-    #[arg(long, env = "AUTH_ROLE_ID")]
+    #[clap(long, env = "AUTH_ROLE_ID")]
     pub auth_role_id: String,
 
     /// Comma separated list of owner IDs
-    #[arg(long, env = "OWNERS")]
+    #[clap(long, env = "OWNERS")]
     pub owners: String,
 
     /// The channel to be used for unranked (Indented to be used to restrict messages for unranked to that channel)
-    #[arg(long, env = "CHANNEL_UNRANKED_ID")]
+    #[clap(long, env = "CHANNEL_UNRANKED_ID")]
     pub channel_unranked_id: String,
 
     /// For bot status messages like on connection
-    #[arg(long, env = "CHANNEL_BOT_STATUS_ID")]
+    #[clap(long, env = "CHANNEL_BOT_STATUS_ID")]
     pub channel_bot_status_id: String,
 }

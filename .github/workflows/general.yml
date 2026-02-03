@@ -5,11 +5,12 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  push:
+  pull_request:
     branches:
+      - main
       - develop
   workflow_call:
-      
+
 env:
   CARGO_TERM_COLOR: always
 

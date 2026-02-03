@@ -100,7 +100,8 @@ async fn main() {
         GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
     .framework(framework)
-    .await.expect("Error creating client");
+    .await
+    .expect("Error creating client");
 
     if let Err(why) = client.start().await {
         error!("Client error: {why:?}");

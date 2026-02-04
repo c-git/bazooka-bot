@@ -42,6 +42,7 @@ impl StartupConfig {
             })
             .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
+        // TODO 4: See if we can devise a new way to decide if it's production and use the suitable secrets
         let is_production = std::env::var("SHUTTLE").is_ok();
 
         Ok(Self {

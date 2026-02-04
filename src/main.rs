@@ -15,6 +15,7 @@ use clap::Parser;
 
 #[tokio::main]
 async fn main() {
+    // TODO 4: Remove expect and unwraps
     tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(

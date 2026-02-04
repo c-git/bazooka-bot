@@ -19,7 +19,7 @@ async fn main() {
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,info")),
+                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,warn")),
         )
         .init();
 

@@ -5,10 +5,13 @@
 #![warn(unused_crate_dependencies)]
 
 mod used_in_bin {
-    use shuttle_serenity as _;
-    use shuttle_shared_db as _;
+    use loadenv as _;
     use tracing_subscriber as _;
 }
+
+use secrecy::SecretString;
+
+use clap::Parser;
 
 use tracing::{info, instrument};
 
@@ -16,7 +19,6 @@ pub use self::{
     commands::commands_list,
     config::{SharedConfig, StartupConfig},
     model::Data,
-    secrets::get_secret_discord_token,
 };
 
 mod commands;
@@ -24,7 +26,6 @@ mod config;
 mod db;
 pub mod heartbeat;
 mod model;
-mod secrets;
 
 /// Type used by poise framework as the context when commands are triggered
 type Context<'a> = poise::Context<'a, Data, anyhow::Error>;
@@ -81,4 +82,31 @@ fn sanitize_markdown(s: String) -> String {
     }
     info!(result);
     result
+}
+
+#[derive(Parser, Debug, Clone)]
+#[clap(author, version, about, long_about = None)]
+pub struct ClapConfig {
+    #[arg(long, env = "DISCORD_TOKEN")]
+    pub discord_token: SecretString,
+
+    /// Used mostly for testing to register the commands directly for the guild
+    #[arg(long, env = "REGISTRATION_GUILD_ID")]
+    pub registration_guild_id: String,
+
+    /// The RoleId of the role that can run privileged commands
+    #[arg(long, env = "AUTH_ROLE_ID")]
+    pub auth_role_id: String,
+
+    /// Comma separated list of owner IDs
+    #[arg(long, env = "OWNERS")]
+    pub owners: String,
+
+    /// The channel to be used for unranked (Indented to be used to restrict messages for unranked to that channel)
+    #[arg(long, env = "CHANNEL_UNRANKED_ID")]
+    pub channel_unranked_id: String,
+
+    /// For bot status messages like on connection
+    #[arg(long, env = "CHANNEL_BOT_STATUS_ID")]
+    pub channel_bot_status_id: String,
 }

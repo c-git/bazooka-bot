@@ -2,10 +2,9 @@ use std::{collections::HashSet, fmt::Debug, time::Instant};
 
 use anyhow::Context as _;
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
-use shuttle_runtime::{SecretStore, tokio};
 use tracing::error;
 
-use crate::secrets::KeyName;
+use crate::ClapConfig;
 
 #[derive(Debug)]
 pub struct StartupConfig {
@@ -20,16 +19,20 @@ pub struct SharedConfig {
     pub start_instant: Instant,
     pub auth_role_id: RoleId,
     pub channel_unranked: ChannelId,
-    pub db_pool: sqlx::PgPool,
     pub channel_bot_status: Option<ChannelId>,
 }
 
 impl StartupConfig {
-    pub fn try_new(secret_store: &SecretStore) -> anyhow::Result<Self> {
-        let guild_id = KeyName::RegistrationGuildId.get_non_secret_parse_opt(secret_store);
+    pub fn try_new(clap_config: &ClapConfig) -> anyhow::Result<Self> {
+        let guild_id = clap_config
+            .registration_guild_id
+            .parse::<u64>()
+            .context("failed to parse guild id")
+            .map(GuildId::new)?;
 
-        let owners: HashSet<UserId> = KeyName::Owners
-            .get_non_secret_string(secret_store)?
+        // TODO 4 - See if we can split this in clap
+        let owners: HashSet<UserId> = clap_config
+            .owners
             .split(',')
             .map(|x| {
                 x.parse::<u64>()
@@ -41,7 +44,7 @@ impl StartupConfig {
         let is_production = std::env::var("SHUTTLE").is_ok();
 
         Ok(Self {
-            registration_guild_id: guild_id,
+            registration_guild_id: Some(guild_id),
             owners,
             is_production,
         })
@@ -49,18 +52,27 @@ impl StartupConfig {
 }
 
 impl SharedConfig {
-    pub fn try_new(
-        secret_store: &SecretStore,
-        db_pool: sqlx::PgPool,
-    ) -> anyhow::Result<&'static Self> {
-        let auth_role_id = KeyName::AuthRoleId.get_non_secret_parse(secret_store)?;
-        let channel_unranked = KeyName::ChannelUnrankedId.get_non_secret_parse(secret_store)?;
-        let channel_bot_status = KeyName::ChannelBotStatus.get_non_secret_parse_opt(secret_store);
+    pub fn try_new(clap_config: &ClapConfig) -> anyhow::Result<&'static Self> {
+        let auth_role_id = clap_config
+            .auth_role_id
+            .parse::<u64>()
+            .context("failed to parse auth role id")
+            .map(RoleId::new)?;
+        let channel_unranked = clap_config
+            .channel_unranked_id
+            .parse::<u64>()
+            .context("failed to parse unranked channel id")
+            .map(ChannelId::new)?;
+        let channel_bot_status = clap_config
+            .channel_bot_status_id
+            .parse::<u64>()
+            .context("failed to parse bot status channel id")
+            .ok()
+            .map(ChannelId::new);
         let result = Box::new(Self {
             start_instant: Instant::now(),
             auth_role_id,
             channel_unranked,
-            db_pool,
             channel_bot_status,
         });
         Ok(Box::leak(result))
@@ -68,11 +80,10 @@ impl SharedConfig {
 
     /// Doesn't actually perform the save but spawns a task to do it in the background
     pub fn save_kv<T: serde::Serialize>(&self, key: &str, value: &T) -> anyhow::Result<()> {
-        let pool = self.db_pool.clone();
         let key = key.to_string();
         let value = serde_json::to_string(value).context("failed to convert to json")?;
         tokio::spawn(async move {
-            crate::db::save_kv(&pool, &key, value).await;
+            crate::db::save_kv(&key, value).await;
         });
         Ok(())
     }
@@ -81,7 +92,7 @@ impl SharedConfig {
         &self,
         key: &str,
     ) -> T {
-        let Some(content) = crate::db::load_kv(&self.db_pool, key).await else {
+        let Some(content) = crate::db::load_kv(key).await else {
             return T::default();
         };
         match serde_json::from_str(&content) {

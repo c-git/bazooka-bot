@@ -1,13 +1,9 @@
 use anyhow::Context as _;
-use bazooka_bot::{
-    Data, SharedConfig, StartupConfig, commands_list, get_secret_discord_token, heartbeat,
-};
+use bazooka_bot::{ClapConfig, Data, SharedConfig, StartupConfig, commands_list, heartbeat};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
-use shuttle_runtime::SecretStore;
-use shuttle_serenity::ShuttleSerenity;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::{
     EnvFilter,
     fmt::{self, format::FmtSpan},
@@ -15,14 +11,10 @@ use tracing_subscriber::{
 };
 use version::version;
 
-#[shuttle_runtime::main]
-async fn main(
-    #[shuttle_runtime::Secrets] secret_store: SecretStore,
-    #[shuttle_shared_db::Postgres(
-        local_uri = "postgres://db_user:password@localhost:5432/bazooka_bot"
-    )]
-    db_pool: sqlx::PgPool,
-) -> ShuttleSerenity {
+use clap::Parser;
+
+#[tokio::main]
+async fn main() {
     tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
@@ -33,17 +25,17 @@ async fn main(
 
     info!("Bot version is {}", version::version!());
 
-    sqlx::migrate!("./migrations")
-        .run(&db_pool)
-        .await
-        .expect("Migrations failed");
-
     // Load setup values
-    let discord_token = get_secret_discord_token(&secret_store)?;
+    info!("Loading environment variables");
+    loadenv::load().expect("failed to load .env file");
+    let clap_config = ClapConfig::parse();
+    debug!("ClapConfig: {:?}", clap_config);
+
     let startup_config =
-        StartupConfig::try_new(&secret_store).context("failed to create setup config")?;
-    let shared_config = SharedConfig::try_new(&secret_store, db_pool.clone())
-        .context("failed to created shared_config")?;
+        StartupConfig::try_new(&clap_config).expect("failed to create setup config");
+    let shared_config =
+        SharedConfig::try_new(&clap_config).expect("failed to created shared_config");
+    let discord_token = clap_config.discord_token;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -86,7 +78,7 @@ async fn main(
                 let connect_msg = format!(
                     "{} is connected! Version: {}\n{}", 
                     ready.user.name, version!(),
-                    heartbeat::last_heartbeat_info(db_pool.clone()).await,
+                    heartbeat::last_heartbeat_info().await,
                 );
                 info!("{connect_msg}");
                 if let Some(channel) = shared_config.channel_bot_status{
@@ -95,20 +87,23 @@ async fn main(
                     warn!("Not sending connection notification because channel_bot_status not set");
                 }
                 let data = Data::new(shared_config, ctx.clone()).await;
-                heartbeat::start_heartbeat(db_pool);
+                heartbeat::start_heartbeat();
                 info!("END OF SETUP CLOSURE");
                 Ok(data)
             })
         })
         .build();
 
-    let client = ClientBuilder::new(
+    let mut client = ClientBuilder::new(
         discord_token.expose_secret(),
+        // TODO 5: Try reducing intents
         GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
     .framework(framework)
     .await
-    .map_err(shuttle_runtime::CustomError::new)?;
+    .expect("Error creating client");
 
-    Ok(client.into())
+    if let Err(why) = client.start().await {
+        error!("Client error: {why:?}");
+    }
 }

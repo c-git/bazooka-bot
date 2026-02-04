@@ -2,11 +2,11 @@ use super::one_based_id::OneBasedId;
 use crate::{Data, commands::do_start_event};
 use anyhow::{Context, bail};
 use human_time::ToHumanTimeString;
-use shuttle_runtime::tokio::{self, task::JoinHandle};
 use std::{
     fmt::Display,
     time::{Duration, UNIX_EPOCH},
 };
+use tokio::task::JoinHandle;
 use tracing::{error, info, instrument, warn};
 
 pub mod protected_ops;

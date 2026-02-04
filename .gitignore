@@ -2,3 +2,6 @@
 .shuttle-storage
 Secrets*.toml
 .shuttle*
+KV/
+.env
+.idea/workspace.xml

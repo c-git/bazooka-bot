@@ -9,8 +9,8 @@ use tracing::{error, info};
 
 const KEY: &str = "HEARTBEAT";
 
-pub fn start_heartbeat(db_pool: sqlx::PgPool) {
-    shuttle_runtime::tokio::spawn(async move {
+pub fn start_heartbeat() {
+    tokio::spawn(async move {
         info!("Heartbeat started");
         loop {
             let timestamp = match UnixTimestamp::now() {
@@ -20,14 +20,14 @@ pub fn start_heartbeat(db_pool: sqlx::PgPool) {
                     break;
                 }
             };
-            save_kv(&db_pool, KEY, timestamp.to_db_fmt()).await;
-            shuttle_runtime::tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            save_kv(KEY, timestamp.to_db_fmt()).await;
+            tokio::time::sleep(std::time::Duration::from_secs(600)).await;
         }
     });
 }
 
-pub async fn last_heartbeat_info(db_pool: sqlx::PgPool) -> String {
-    match load_kv(&db_pool, KEY).await {
+pub async fn last_heartbeat_info() -> String {
+    match load_kv(KEY).await {
         Some(db_value) => match UnixTimestamp::from_db_fmt(&db_value) {
             Ok(last_heartbeat) => {
                 let Ok(now) = UnixTimestamp::now() else {

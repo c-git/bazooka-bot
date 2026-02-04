@@ -84,7 +84,7 @@ fn sanitize_markdown(s: String) -> String {
     result
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct ClapConfig {
     #[arg(long, env = "DISCORD_TOKEN")]

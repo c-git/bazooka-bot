@@ -2,7 +2,6 @@ use anyhow::Context as _;
 use bazooka_bot::{ClapConfig, Data, SharedConfig, StartupConfig, commands_list, heartbeat};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
-use shuttle_serenity::ShuttleSerenity;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 use tracing_subscriber::{
@@ -14,8 +13,8 @@ use version::version;
 
 use clap::Parser;
 
-#[shuttle_runtime::main]
-async fn main() -> ShuttleSerenity {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
@@ -33,9 +32,9 @@ async fn main() -> ShuttleSerenity {
     info!("ClapConfig: {:?}", clap_config);
 
     let startup_config =
-        StartupConfig::try_new(&clap_config).context("failed to create setup config")?;
+        StartupConfig::try_new(&clap_config).expect("failed to create setup config");
     let shared_config =
-        SharedConfig::try_new(&clap_config).context("failed to created shared_config")?;
+        SharedConfig::try_new(&clap_config).expect("failed to created shared_config");
     let discord_token = clap_config.discord_token;
 
     let framework = poise::Framework::builder()
@@ -95,14 +94,16 @@ async fn main() -> ShuttleSerenity {
         })
         .build();
 
-    let client = ClientBuilder::new(
+    let mut client = ClientBuilder::new(
         discord_token.expose_secret(),
         // TODO 5: Try reducing intents
         GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
     .framework(framework)
     .await
-    .map_err(shuttle_runtime::CustomError::new)?;
+    .expect("Error creating client");
 
-    Ok(client.into())
+    if let Err(why) = client.start().await {
+        error!("Client error: {why:?}");
+    }
 }

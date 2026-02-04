@@ -10,7 +10,7 @@ use tracing::{error, info};
 const KEY: &str = "HEARTBEAT";
 
 pub fn start_heartbeat() {
-    shuttle_runtime::tokio::spawn(async move {
+    tokio::spawn(async move {
         info!("Heartbeat started");
         loop {
             let timestamp = match UnixTimestamp::now() {
@@ -21,7 +21,7 @@ pub fn start_heartbeat() {
                 }
             };
             save_kv(KEY, timestamp.to_db_fmt()).await;
-            shuttle_runtime::tokio::time::sleep(std::time::Duration::from_secs(600)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(600)).await;
         }
     });
 }

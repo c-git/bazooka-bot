@@ -92,7 +92,7 @@ pub struct ClapConfig {
 
     /// Used mostly for testing to register the commands directly for the guild
     #[arg(long, env = "REGISTRATION_GUILD_ID")]
-    pub registration_guild_id: String,
+    pub registration_guild_id: Option<String>,
 
     /// The RoleId of the role that can run privileged commands
     #[arg(long, env = "AUTH_ROLE_ID")]

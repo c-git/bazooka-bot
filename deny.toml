@@ -3,5 +3,4 @@ ignore = [
   # "RUSTSEC-0000-0000",
   # { id = "RUSTSEC-0000-0000", reason = "you can specify a reason the advisory is ignored" },
   { id = "RUSTSEC-2024-0388", reason = "Tracking issue https://github.com/serenity-rs/poise/issues/334" },
-  { id = "RUSTSEC-2025-0057", reason = "Tracking issue https://github.com/serenity-rs/serenity/issues/3420" },
 ]

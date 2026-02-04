@@ -26,11 +26,12 @@ impl StartupConfig {
     pub fn try_new(clap_config: &ClapConfig) -> anyhow::Result<Self> {
         let guild_id = clap_config
             .registration_guild_id
-            .parse::<u64>()
-            .context("failed to parse guild id")
-            .map(GuildId::new)?;
+            .as_ref()
+            .map(|x| x.parse::<u64>().map(GuildId::new))
+            .transpose()
+            .context("failed to parse guild id")?;
 
-        // TODO 4 - See if we can split this in clap
+        // TODO 5 - See if we can split this in clap
         let owners: HashSet<UserId> = clap_config
             .owners
             .split(',')
@@ -41,10 +42,10 @@ impl StartupConfig {
             })
             .collect::<anyhow::Result<HashSet<UserId>>>()?;
 
-        let is_production = std::env::var("SHUTTLE").is_ok();
+        let is_production = std::env::var("IS_PROD").is_ok();
 
         Ok(Self {
-            registration_guild_id: Some(guild_id),
+            registration_guild_id: guild_id,
             owners,
             is_production,
         })

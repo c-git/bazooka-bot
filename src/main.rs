@@ -1,4 +1,4 @@
-use anyhow::Context as _;
+use anyhow::{Context as _, bail};
 use bazooka_bot::{ClapConfig, Data, SharedConfig, StartupConfig, commands_list, heartbeat};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
@@ -14,7 +14,7 @@ use version::version;
 use clap::Parser;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
@@ -27,14 +27,17 @@ async fn main() {
 
     // Load setup values
     info!("Loading environment variables");
-    loadenv::load().expect("failed to load .env file");
+    match loadenv::load() {
+        Ok(was_found) => debug!(".env file was found: {was_found}"),
+        Err(err_msg) => bail!("failed to load .env file: {err_msg:?}"),
+    }
     let clap_config = ClapConfig::parse();
     debug!("ClapConfig: {:?}", clap_config);
 
     let startup_config =
-        StartupConfig::try_new(&clap_config).expect("failed to create setup config");
+        StartupConfig::try_new(&clap_config).context("failed to create setup config")?;
     let shared_config =
-        SharedConfig::try_new(&clap_config).expect("failed to created shared_config");
+        SharedConfig::try_new(&clap_config).context("failed to created shared_config")?;
     let discord_token = clap_config.discord_token;
 
     let framework = poise::Framework::builder()
@@ -101,9 +104,10 @@ async fn main() {
     )
     .framework(framework)
     .await
-    .expect("Error creating client");
+    .context("Error creating client")?;
 
-    if let Err(why) = client.start().await {
-        error!("Client error: {why:?}");
-    }
+    client
+        .start()
+        .await
+        .context("failed to start discord client")
 }

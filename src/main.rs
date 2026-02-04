@@ -3,7 +3,7 @@ use bazooka_bot::{ClapConfig, Data, SharedConfig, StartupConfig, commands_list, 
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use secrecy::ExposeSecret;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::{
     EnvFilter,
     fmt::{self, format::FmtSpan},
@@ -19,7 +19,7 @@ async fn main() {
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,info")),
+                .unwrap_or_else(|_| EnvFilter::new("zbus=warn,serenity=warn,warn")),
         )
         .init();
 
@@ -29,7 +29,7 @@ async fn main() {
     info!("Loading environment variables");
     loadenv::load().expect("failed to load .env file");
     let clap_config = ClapConfig::parse();
-    info!("ClapConfig: {:?}", clap_config);
+    debug!("ClapConfig: {:?}", clap_config);
 
     let startup_config =
         StartupConfig::try_new(&clap_config).expect("failed to create setup config");

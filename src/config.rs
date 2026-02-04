@@ -43,11 +43,11 @@ impl StartupConfig {
 
         let is_production = std::env::var("SHUTTLE").is_ok();
 
-        Ok(dbg!(Self {
+        Ok(Self {
             registration_guild_id: Some(guild_id),
             owners,
             is_production,
-        }))
+        })
     }
 }
 
@@ -69,12 +69,12 @@ impl SharedConfig {
             .context("failed to parse bot status channel id")
             .ok()
             .map(ChannelId::new);
-        let result = Box::new(dbg!(Self {
+        let result = Box::new(Self {
             start_instant: Instant::now(),
             auth_role_id,
             channel_unranked,
             channel_bot_status,
-        }));
+        });
         Ok(Box::leak(result))
     }
 

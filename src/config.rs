@@ -31,7 +31,7 @@ impl StartupConfig {
             .transpose()
             .context("failed to parse guild id")?;
 
-        // TODO 4 - See if we can split this in clap
+        // TODO 5 - See if we can split this in clap
         let owners: HashSet<UserId> = clap_config
             .owners
             .split(',')
